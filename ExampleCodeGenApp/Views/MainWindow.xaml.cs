@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Xml.Serialization;
 using ExampleCodeGenApp.ViewModels;
 using ReactiveUI;
 
@@ -66,6 +68,18 @@ namespace ExampleCodeGenApp.Views
 			});
 
             this.ViewModel = new MainViewModel();
+            Loaded +=MainWindow_Loaded;
+            Closed +=MainWindow_Closed;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.Load();
+        }
+
+        private void MainWindow_Closed(object sender, System.EventArgs e)
+        {
+            ViewModel.Save();
         }
     }
 }

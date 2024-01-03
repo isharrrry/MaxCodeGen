@@ -7,7 +7,7 @@ using System.Text;
 using DynamicData;
 using ExampleCodeGenApp.Views;
 using ExampleCodeGenApp.Views.Editors;
-using MoreLinq.Extensions;
+//using MoreLinq.Extensions;
 using NodeNetwork.Toolkit.Group;
 using NodeNetwork.Toolkit.ValueNode;
 using NodeNetwork.ViewModels;
@@ -50,8 +50,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 // Swap SortIndex of this endpoint with the SortIndex of the previous endpoint in the list, if any.
                 var prevElement = endpoints
                     .Where(e => e.SortIndex < Parent.SortIndex)
-                    .MaxBy(e => e.SortIndex)
-                    .FirstOrDefault();
+                    .MaxBy(e => e.SortIndex);
                 if (prevElement != null)
                 {
                     var idx = prevElement.SortIndex;
@@ -66,8 +65,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 
                 var nextElement = endpoints
                     .Where(e => e.SortIndex > Parent.SortIndex)
-                    .MinBy(e => e.SortIndex)
-                    .FirstOrDefault();
+                    .MinBy(e => e.SortIndex);
                 if (nextElement != null)
                 {
                     var idx = nextElement.SortIndex;

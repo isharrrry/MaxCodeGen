@@ -1,10 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml.Serialization;
 using DynamicData;
 using ExampleCodeGenApp.Model;
 using ExampleCodeGenApp.ViewModels.Nodes;
@@ -16,6 +18,8 @@ using NodeNetwork.Toolkit.NodeList;
 using NodeNetwork.Utilities;
 using NodeNetwork.ViewModels;
 using ReactiveUI;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace ExampleCodeGenApp.ViewModels
 {
@@ -119,6 +123,24 @@ namespace ExampleCodeGenApp.ViewModels
                     Name = selectedGroupNode.Name
                 });
             }, isGroupNodeSelected);
+        }
+
+        internal void Save()
+        {
+            // 创建一个Serializer实例
+            //var serializer = new SerializerBuilder()
+            //    //.WithNamingConvention(CamelCaseNamingConvention.Instance)
+            //    .Build();
+
+            //// 将对象序列化为YAML字符串
+            //string yaml = serializer.Serialize(Network);
+            Serializer serializer = new Serializer();
+            var yaml = serializer.Serialize(Network);
+            File.WriteAllText("All.yml", yaml);
+        }
+
+        internal void Load()
+        {
         }
     }
 }

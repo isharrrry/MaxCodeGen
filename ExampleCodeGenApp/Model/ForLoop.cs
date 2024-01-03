@@ -17,14 +17,27 @@ namespace ExampleCodeGenApp.Model
 
         public InlineVariableDefinition<int> CurrentIndex { get; } = new InlineVariableDefinition<int>();
 
+        //public string Compile(CompilerContext context)
+        //{
+        //    context.EnterNewScope("For loop");
+
+        //    CurrentIndex.Value = LowerBound;
+        //    string code = $"for {CurrentIndex.Compile(context)}, {UpperBound.Compile(context)} do\n" +
+        //           LoopBody.Compile(context) + "\n" +
+        //           $"end\n" +
+        //           LoopEnd.Compile(context) + "\n";
+
+        //    context.LeaveScope();
+        //    return code;
+        //}
         public string Compile(CompilerContext context)
         {
             context.EnterNewScope("For loop");
 
             CurrentIndex.Value = LowerBound;
-            string code = $"for {CurrentIndex.Compile(context)}, {UpperBound.Compile(context)} do\n" +
+            string code = $"for(int i = {LowerBound.Compile(context)}; i < {UpperBound.Compile(context)}; i ++)" + "{\n" +
                    LoopBody.Compile(context) + "\n" +
-                   $"end\n" +
+                   "}\n" +
                    LoopEnd.Compile(context) + "\n";
 
             context.LeaveScope();
