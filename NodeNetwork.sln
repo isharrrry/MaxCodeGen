@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29613.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NodeNetwork", "NodeNetwork\NodeNetwork.csproj", "{96E1761E-AE02-48E9-95E8-4A3B2FC32025}"
 EndProject
@@ -36,6 +36,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalculatorTests", "CalculatorTests\CalculatorTests.csproj", "{6FECDB98-52C4-4153-9B69-9165585D94DD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NodeNetworkTests", "NodeNetworkTests\NodeNetworkTests.csproj", "{C80CA3BF-5F3F-48FC-B34A-1CCDD082A828}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonExt", "..\..\..\RTSimPlatform\Links-Common-Library\Common\CommonExt.csproj", "{29496396-B650-4DC8-B97B-FB37F0905E76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{C80CA3BF-5F3F-48FC-B34A-1CCDD082A828}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C80CA3BF-5F3F-48FC-B34A-1CCDD082A828}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C80CA3BF-5F3F-48FC-B34A-1CCDD082A828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29496396-B650-4DC8-B97B-FB37F0905E76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29496396-B650-4DC8-B97B-FB37F0905E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29496396-B650-4DC8-B97B-FB37F0905E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29496396-B650-4DC8-B97B-FB37F0905E76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

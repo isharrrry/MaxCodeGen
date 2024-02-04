@@ -1,25 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml.Serialization;
+using Common;
 using DynamicData;
 using ExampleCodeGenApp.Model;
+using ExampleCodeGenApp.Model.Compiler;
 using ExampleCodeGenApp.ViewModels.Nodes;
 using NodeNetwork.Toolkit.BreadcrumbBar;
 using NodeNetwork.Toolkit.Group;
 using NodeNetwork.Toolkit.Layout;
 using NodeNetwork.Toolkit.Layout.ForceDirected;
 using NodeNetwork.Toolkit.NodeList;
+using NodeNetwork.Toolkit.ValueNode;
 using NodeNetwork.Utilities;
 using NodeNetwork.ViewModels;
 using ReactiveUI;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization.TypeInspectors;
 
 namespace ExampleCodeGenApp.ViewModels
 {
@@ -48,8 +55,8 @@ namespace ExampleCodeGenApp.ViewModels
         public CodeSimViewModel CodeSim { get; } = new CodeSimViewModel();
 
         public ReactiveCommand<Unit, Unit> AutoLayout { get; }
-		public ReactiveCommand<Unit, Unit> StartAutoLayoutLive { get; }
-		public ReactiveCommand<Unit, Unit> StopAutoLayoutLive { get; }
+        public ReactiveCommand<Unit, Unit> StartAutoLayoutLive { get; }
+        public ReactiveCommand<Unit, Unit> StopAutoLayoutLive { get; }
 
         public ReactiveCommand<Unit, Unit> GroupNodes { get; }
         public ReactiveCommand<Unit, Unit> UngroupNodes { get; }
@@ -66,7 +73,7 @@ namespace ExampleCodeGenApp.ViewModels
                 Network = new NetworkViewModel()
             });
 
-            ButtonEventNode eventNode = new ButtonEventNode {CanBeRemovedByUser = false};
+            ButtonEventNode eventNode = new ButtonEventNode { CanBeRemovedByUser = false };
             Network.Nodes.Add(eventNode);
 
             //NodeList.AddNodeType(() => new ButtonEventNode());
@@ -79,12 +86,12 @@ namespace ExampleCodeGenApp.ViewModels
             codeObservable.BindTo(this, vm => vm.CodePreview.Code);
             codeObservable.BindTo(this, vm => vm.CodeSim.Code);
 
-			ForceDirectedLayouter layouter = new ForceDirectedLayouter();
-			AutoLayout = ReactiveCommand.Create(() => layouter.Layout(new Configuration { Network = Network }, 10000));
-			StartAutoLayoutLive = ReactiveCommand.CreateFromObservable(() => 
-				Observable.StartAsync(ct => layouter.LayoutAsync(new Configuration { Network = Network }, ct)).TakeUntil(StopAutoLayoutLive)
-			);
-			StopAutoLayoutLive = ReactiveCommand.Create(() => { }, StartAutoLayoutLive.IsExecuting);
+            ForceDirectedLayouter layouter = new ForceDirectedLayouter();
+            AutoLayout = ReactiveCommand.Create(() => layouter.Layout(new Configuration { Network = Network }, 10000));
+            StartAutoLayoutLive = ReactiveCommand.CreateFromObservable(() =>
+                Observable.StartAsync(ct => layouter.LayoutAsync(new Configuration { Network = Network }, ct)).TakeUntil(StopAutoLayoutLive)
+            );
+            StopAutoLayoutLive = ReactiveCommand.Create(() => { }, StartAutoLayoutLive.IsExecuting);
 
             var grouper = new NodeGrouper
             {
@@ -97,7 +104,7 @@ namespace ExampleCodeGenApp.ViewModels
             };
             GroupNodes = ReactiveCommand.Create(() =>
             {
-                var groupBinding = (CodeNodeGroupIOBinding) grouper.MergeIntoGroup(Network, Network.SelectedNodes.Items);
+                var groupBinding = (CodeNodeGroupIOBinding)grouper.MergeIntoGroup(Network, Network.SelectedNodes.Items);
                 ((GroupNodeViewModel)groupBinding.GroupNode).IOBinding = groupBinding;
                 ((GroupSubnetIONodeViewModel)groupBinding.EntranceNode).IOBinding = groupBinding;
                 ((GroupSubnetIONodeViewModel)groupBinding.ExitNode).IOBinding = groupBinding;
@@ -125,6 +132,64 @@ namespace ExampleCodeGenApp.ViewModels
             }, isGroupNodeSelected);
         }
 
+        static List<Type> WithTypeMappingSet;
+        static MainViewModel()
+        {
+            WithTypeMappingSet = GetWithTypeMappingSet();
+        }
+        private static List<Type> GetWithTypeMappingSet()
+        {
+            Dictionary<Type, Type> tDic = new Dictionary<Type, Type>();
+            var tList = Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(IStatement));
+            tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(IExpression)));
+            tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(Endpoint)));
+            tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(NodeViewModel)));
+            tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(NodeEndpointEditorViewModel)));
+            tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(NetworkViewModel)));
+            tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(PortViewModel)));
+            //tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(NodeInputViewModel)));
+            tList.Add((typeof(CodeGenNodeViewModel)));
+            tList.Add((typeof(NodeViewModel)));
+            tList.Add((typeof(NodeEndpointEditorViewModel)));
+            tList.Add((typeof(NetworkViewModel)));
+            tList.Add((typeof(PortViewModel)));
+            tList.Add((typeof(CodeGenOutputViewModel<ITypedExpression<int>>)));
+            tList.Add((typeof(CodeGenOutputViewModel<ITypedExpression<string>>)));
+            tList.Add((typeof(CodeGenOutputViewModel<ITypedExpression<double>>)));
+            //tList.Add((typeof(ValueNodeInputViewModel<ITypedExpression<string>>))); 
+            //tList.Add((typeof(ObservableCollection<ISwitchModule>)));
+            foreach (var t in tList)
+            {
+                tDic[t] = t;
+            }
+            return tDic.Values.ToList();
+        }
+        public T Deserialize<T>(string SerializeText)
+        {
+            return YmlConfigHelper.ConfigDeserializeWithTypeMappingSet<T>(SerializeText, WithTypeMappingSet);
+        }
+
+        internal void Load()
+        {
+            try
+            {
+                var obj = Deserialize<List<NodeViewModel>>(File.ReadAllText("All.yml"));
+                Network.Nodes.Clear();
+                foreach (var item in obj)
+                {
+                    Network.Nodes.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+        public string Serialize()
+        {
+            return YmlConfigHelper.ConfigSerializeWithTypeMappingSet(Network.Nodes.Items.ToList(), WithTypeMappingSet, SerializerBuilderWith);
+        }
+
         internal void Save()
         {
             // 创建一个Serializer实例
@@ -132,15 +197,127 @@ namespace ExampleCodeGenApp.ViewModels
             //    //.WithNamingConvention(CamelCaseNamingConvention.Instance)
             //    .Build();
 
+            //把列表中所有节点序列化，把节点的关系序列化、组关系
+            //找列表：创建节点过程NetworkViewModel的Nodes和Connections、创建组过程
+
             //// 将对象序列化为YAML字符串
             //string yaml = serializer.Serialize(Network);
-            Serializer serializer = new Serializer();
-            var yaml = serializer.Serialize(Network);
+            ;
+            var yaml = Serialize();
             File.WriteAllText("All.yml", yaml);
         }
 
-        internal void Load()
+        private void SerializerBuilderWith(SerializerBuilder serializer)
         {
+            var ignore = new YamlIgnoreAttribute();
+            serializer = serializer.WithAttributeOverride<ReactiveObject>(d => d.Changed, ignore);
+            serializer = serializer.WithAttributeOverride<ReactiveObject>(d => d.Changing, ignore);
+            serializer = serializer.WithAttributeOverride<ReactiveObject>(d => d.ThrownExceptions, ignore);
+            //serializer = serializer.WithAttributeOverride<IObservableList<Object>>(d => d.CountChanged, ignore);
+            //NetworkViewModel
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.OnPendingConnectionDropped, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.Validator, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.SelectionRectangle, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.ConnectionFactory, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.SelectedNodes, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.DeleteSelectedNodes, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.UpdateValidation, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.Validation, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.ConnectionsUpdated, ignore);
+            serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.NetworkChanged, ignore);
+
+            //NodeViewModel
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Parent, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.EndpointGroupViewModelFactory, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.HeaderIcon, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Resizable, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.CanBeRemovedByUser, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Inputs, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Outputs, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.VisibleInputs, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.VisibleOutputs, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.VisibleEndpointGroups, ignore);
+            serializer = serializer.WithAttributeOverride<IntLiteralNode>(d => d.ValueEditor, ignore);
+            serializer = serializer.WithAttributeOverride<IntLiteralNode>(d => d.Output, ignore);
+            serializer = serializer.WithAttributeOverride<GroupSubnetIONodeViewModel>(d => d.IOBinding, ignore);
+            serializer = serializer.WithAttributeOverride<GroupSubnetIONodeViewModel>(d => d.AddEndpointDropPanelVM, ignore);
+
+            //PortViewModel
+            //serializer = serializer.WithAttributeOverride<PortViewModel>(d => d.Parent, ignore);
+            serializer = serializer.WithAttributeOverride<PortViewModel>(d => d.IsVisible, ignore);
+            serializer = serializer.WithAttributeOverride<PortViewModel>(d => d.IsHighlighted, ignore);
+
+            //Endpoint
+            serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Parent, ignore);
+            serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Port, ignore);
+            serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Visibility, ignore);
+            serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Connections, ignore);
+            serializer = serializer.WithAttributeOverride<NodeInputViewModel>(d => d.ConnectionValidator, ignore);
+            serializer = serializer.WithAttributeOverride<NodeInputViewModel>(d => d.IsEditorVisible, ignore);
+            serializer = serializer.WithAttributeOverride<NodeInputViewModel>(d => d.HideEditorIfConnected, ignore);
+            serializer = serializer.WithAttributeOverride<NodeInputViewModel>(d => d.MaxConnections, ignore);
+            serializer = serializer.WithAttributeOverride<NodeInputViewModel>(d => d.PortPosition, ignore);
+            serializer = serializer.WithAttributeOverride<NodeOutputViewModel>(d => d.MaxConnections, ignore);
+            serializer = serializer.WithAttributeOverride<NodeOutputViewModel>(d => d.PortPosition, ignore);
+            serializer = serializer.WithAttributeOverride<ValueListNodeInputViewModel<object>>(d => d.Values, ignore);
+
+            //NodeEndpointEditorViewModel
+            //serializer = serializer.WithAttributeOverride<NodeEndpointEditorViewModel>(d => d.Parent, ignore);
+            //serializer = serializer.WithAttributeOverride<ValueEditorViewModel<Object>>(d => d.ValueChanged, ignore);
+
+            serializer.WithTypeInspector(inner => new CustomTypeInspector(inner));
+
+
+            //....
+            serializer = serializer.WithAttributeOverride<ButtonEventNode>(d => d.OnClickFlow, ignore);
+            serializer = serializer.WithAttributeOverride<CodeGenNodeViewModel>(d => d.NodeType, ignore);
+            serializer = serializer.WithAttributeOverride<Size>(d => d.IsEmpty, ignore);
+            serializer = serializer.WithAttributeOverride<PrintNode>(d => d.Text, ignore);
+            serializer = serializer.WithAttributeOverride<PrintNode>(d => d.Flow, ignore);
+            serializer = serializer.WithAttributeOverride<TextLiteralNode>(d => d.ValueEditor, ignore);
+            serializer = serializer.WithAttributeOverride<TextLiteralNode>(d => d.Output, ignore);
+        }
+
+    }
+
+    internal class CustomTypeInspector : TypeInspectorSkeleton
+    {
+        private readonly ITypeInspector innerTypeInspector;
+
+        public CustomTypeInspector(ITypeInspector innerTypeInspector)
+        {
+            this.innerTypeInspector = innerTypeInspector;
+        }
+
+        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container)
+        {
+            var properties = innerTypeInspector.GetProperties(type, container);
+
+            // 忽略带有泛型类型的属性
+            properties = properties.Where(p =>
+            {
+                if (p.Name == "CountChanged")
+                {
+                    var s = type;
+                    return !(
+                        IsImportGenInterface(container, typeof(IObservableList<>))
+                    );
+                }
+                else if (p.Name == "ValueChanged")
+                {
+                    return !(
+                       (typeof(NodeEndpointEditorViewModel)).IsAssignableFrom(container.GetType())//ValueEditorViewModel<> 不好判断，用IsAssignableFrom
+                    || (typeof(NodeInputViewModel)).IsAssignableFrom(container.GetType())
+                    );
+                }
+                return true;
+            });
+            return properties;
+        }
+
+        public static bool IsImportGenInterface(object container, Type type)
+        {
+            return container.GetType().GetInterfaces().Where(x => x.FullName.StartsWith(type.FullName)).Count() > 0;
         }
     }
 }
