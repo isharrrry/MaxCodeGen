@@ -12,6 +12,7 @@ using ExampleCodeGenApp.Views;
 using NodeNetwork.Toolkit.ValueNode;
 using NodeNetwork.ViewModels;
 using ReactiveUI;
+using YamlDotNet.Serialization;
 
 namespace ExampleCodeGenApp.ViewModels.Nodes
 {
@@ -21,15 +22,20 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
         {
             Splat.Locator.CurrentMutable.Register(() => new CodeGenNodeView(), typeof(IViewFor<ForLoopNode>));
         }
-
+        [YamlIgnore]
         public ValueNodeOutputViewModel<IStatement> FlowIn { get; }
 
+        [YamlIgnore]
         public ValueListNodeInputViewModel<IStatement> LoopBodyFlow { get; }
+        [YamlIgnore]
         public ValueListNodeInputViewModel<IStatement> LoopEndFlow { get; }
-        
+
+        [YamlIgnore]
         public ValueNodeInputViewModel<ITypedExpression<int>> FirstIndex { get; }
+        [YamlIgnore]
         public ValueNodeInputViewModel<ITypedExpression<int>> LastIndex { get; }
 
+        [YamlIgnore]
         public ValueNodeOutputViewModel<ITypedExpression<int>> CurrentIndex { get; }
 
         public ForLoopNode() : base(NodeType.FlowControl)
