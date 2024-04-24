@@ -17,6 +17,8 @@ namespace ExampleCalculatorApp.ViewModels.Nodes
 
         public ValueNodeOutputViewModel<int?> Output { get; }
 
+        public int? IValue { get => ValueEditor.Value; set => ValueEditor.Value = value; }
+
         public ConstantNodeViewModel()
         {
             this.Name = "Constant";

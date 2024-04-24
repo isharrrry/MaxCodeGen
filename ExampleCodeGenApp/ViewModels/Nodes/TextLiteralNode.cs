@@ -25,6 +25,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 
         public ValueNodeOutputViewModel<ITypedExpression<string>> Output { get; }
 
+        public string IValue { get => ValueEditor.Value; set => ValueEditor.Value = value; }
+
         public TextLiteralNode() : base(NodeType.Literal)
         {
             this.Name = "Text";

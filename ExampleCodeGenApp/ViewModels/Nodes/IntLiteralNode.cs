@@ -26,6 +26,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 
         public ValueNodeOutputViewModel<ITypedExpression<int>> Output { get; }
 
+        public int? IValue { get => ValueEditor.Value; set => ValueEditor.Value = value; }
+
         public IntLiteralNode() : base(NodeType.Literal)
         {
             this.Name = "Integer";
