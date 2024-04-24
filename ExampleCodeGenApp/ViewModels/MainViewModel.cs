@@ -148,6 +148,7 @@ namespace ExampleCodeGenApp.ViewModels
             tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(NetworkViewModel)));
             tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(PortViewModel)));
             //tList.AddRange(Assembly.GetExecutingAssembly().GetSubClassTypesByType(typeof(NodeInputViewModel)));
+            tList.Add((typeof(ConnectionViewModel)));
             tList.Add((typeof(CodeGenNodeViewModel)));
             tList.Add((typeof(NodeViewModel)));
             tList.Add((typeof(NodeEndpointEditorViewModel)));
@@ -156,6 +157,9 @@ namespace ExampleCodeGenApp.ViewModels
             tList.Add((typeof(CodeGenOutputViewModel<ITypedExpression<int>>)));
             tList.Add((typeof(CodeGenOutputViewModel<ITypedExpression<string>>)));
             tList.Add((typeof(CodeGenOutputViewModel<ITypedExpression<double>>)));
+            tList.Add((typeof(CodeGenInputViewModel<ITypedExpression<int>>)));
+            tList.Add((typeof(CodeGenInputViewModel<ITypedExpression<string>>)));
+            tList.Add((typeof(CodeGenInputViewModel<ITypedExpression<double>>)));
             //tList.Add((typeof(ValueNodeInputViewModel<ITypedExpression<string>>))); 
             //tList.Add((typeof(ObservableCollection<ISwitchModule>)));
             foreach (var t in tList)
@@ -173,12 +177,13 @@ namespace ExampleCodeGenApp.ViewModels
         {
             try
             {
-                var obj = Deserialize<List<NodeViewModel>>(File.ReadAllText("All.yml"));
+                var obj = Deserialize<NetworkConfig>(File.ReadAllText("All.yml"));
                 Network.Nodes.Clear();
-                foreach (var item in obj)
+                foreach (var item in obj.Nodes)
                 {
                     Network.Nodes.Add(item);
                 }
+                obj.GetConnectionConfigs(Network);
             }
             catch (Exception ex)
             {
@@ -187,7 +192,10 @@ namespace ExampleCodeGenApp.ViewModels
         }
         public string Serialize()
         {
-            return YmlConfigHelper.ConfigSerializeWithTypeMappingSet(Network.Nodes.Items.ToList(), WithTypeMappingSet, SerializerBuilderWith);
+            var cfg = new NetworkConfig();
+            cfg.Nodes = Network.Nodes.Items.ToList();
+            cfg.SetConnectionConfigs(Network.Connections.Items.ToList());
+            return YmlConfigHelper.ConfigSerializeWithTypeMappingSet(cfg, WithTypeMappingSet, SerializerBuilderWith);
         }
 
         internal void Save()
@@ -227,7 +235,7 @@ namespace ExampleCodeGenApp.ViewModels
             serializer = serializer.WithAttributeOverride<NetworkViewModel>(d => d.NetworkChanged, ignore);
 
             //NodeViewModel
-            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Parent, ignore);
+            serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Parent, ignore);//比导致ButtonEventNode 具有Parent
             serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.EndpointGroupViewModelFactory, ignore);
             serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.HeaderIcon, ignore);
             serializer = serializer.WithAttributeOverride<NodeViewModel>(d => d.Resizable, ignore);
@@ -248,7 +256,7 @@ namespace ExampleCodeGenApp.ViewModels
             serializer = serializer.WithAttributeOverride<PortViewModel>(d => d.IsHighlighted, ignore);
 
             //Endpoint
-            serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Parent, ignore);
+            //serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Parent, ignore);
             serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Port, ignore);
             serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Visibility, ignore);
             serializer = serializer.WithAttributeOverride<Endpoint>(d => d.Connections, ignore);
@@ -276,6 +284,7 @@ namespace ExampleCodeGenApp.ViewModels
             serializer = serializer.WithAttributeOverride<PrintNode>(d => d.Flow, ignore);
             serializer = serializer.WithAttributeOverride<TextLiteralNode>(d => d.ValueEditor, ignore);
             serializer = serializer.WithAttributeOverride<TextLiteralNode>(d => d.Output, ignore);
+            serializer = serializer.WithAttributeOverride<ConnectionViewModel>(d => d.Parent, ignore);
         }
 
     }
