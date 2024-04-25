@@ -39,13 +39,13 @@ namespace ExampleCodeGenApp.Model
             switch (context.ScriptLanguage)
             {
                 case ScriptLanguage.CSharp:
-                    code = $"for(int i = {LowerBound.Compile(context)}; i < {UpperBound.Compile(context)}; i ++)" + "{\n" +
+                    code = $"for(var {CurrentIndex.Compile(context)}; {CurrentIndex.VariableName} < {UpperBound.Compile(context)}; {CurrentIndex.VariableName} ++)" + "{\n" +
                            LoopBody.Compile(context) + "\n" +
                            "}\n" +
                            LoopEnd.Compile(context) + "\n";
                     break;
                 case ScriptLanguage.C:
-                    code = $"int i;\nfor(i = {LowerBound.Compile(context)}; i < {UpperBound.Compile(context)}; i ++)" + "{\n" +
+                    code = $"int {CurrentIndex.VariableName};\nfor({CurrentIndex.Compile(context)}; {CurrentIndex.VariableName} < {UpperBound.Compile(context)}; {CurrentIndex.VariableName} ++)" + "{\n" +
                            LoopBody.Compile(context) + "\n" +
                            "}\n" +
                            LoopEnd.Compile(context) + "\n";

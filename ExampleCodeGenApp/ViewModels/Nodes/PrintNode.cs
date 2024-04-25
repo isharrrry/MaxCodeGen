@@ -45,7 +45,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 Value = this.Text.ValueChanged.Select(stringExpr => new FunctionCall
                 {
                     //FunctionName = "print",
-                    FunctionName = "Console.Write",
+                    FunctionName = "Console.WriteLine",
                     Parameters =
                     {
                         stringExpr ?? new StringLiteral{Value = ""}

@@ -24,6 +24,10 @@ namespace ExampleCodeGenApp.Model.Compiler
 
         public Stack<ScopeDefinition> VariablesScopesStack { get; } = new Stack<ScopeDefinition>();
         
+        /// <summary>
+        /// 分配变量名/生成变量名
+        /// </summary>
+        /// <returns></returns>
         public string FindFreeVariableName()
         {
             return "v" + VariablesScopesStack.SelectMany(s => s.Variables).Count();

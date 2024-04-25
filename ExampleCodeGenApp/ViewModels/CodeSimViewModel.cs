@@ -264,7 +264,7 @@ namespace Test{
 
         public void Print(string msg)
         {
-            Output += msg + "\n";
+            Output += msg;
         }
     }
 

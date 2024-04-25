@@ -98,6 +98,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             };
             this.Outputs.Add(FlowIn);
 
+            //输出的CurrentIndex是ForLoop的CurrentIndex的引用
             CurrentIndex = new CodeGenOutputViewModel<ITypedExpression<int>>(PortType.Integer)
             {
                 Name = "Current Index",

@@ -16,6 +16,8 @@ namespace ExampleCodeGenApp.Model
         {
             switch (context.ScriptLanguage)
             {
+                case ScriptLanguage.Lua:
+                    return $"{FunctionName}({String.Join(", ", Parameters.Select(p => p.Compile(context)))})\n";
                 case ScriptLanguage.CSharp:
                 case ScriptLanguage.C:
                 default:

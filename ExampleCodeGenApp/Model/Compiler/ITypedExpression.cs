@@ -13,7 +13,10 @@ namespace ExampleCodeGenApp.Model.Compiler
     public interface IExpression : IProgram
     {
     }
-
+    /// <summary>
+    /// Base IExpression
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface ITypedExpression<T> : IExpression
     {
     }

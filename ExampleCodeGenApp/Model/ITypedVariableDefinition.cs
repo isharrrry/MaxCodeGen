@@ -11,7 +11,10 @@ namespace ExampleCodeGenApp.Model
     {
         string VariableName { get; }
     }
-
+    /// <summary>
+    /// Base IStatement and Name
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface ITypedVariableDefinition<T> : IVariableDefinition
     {
     }

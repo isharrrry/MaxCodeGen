@@ -25,16 +25,21 @@ namespace ExampleCodeGenApp.Model
             switch (context.ScriptLanguage)
             {
                 case ScriptLanguage.CSharp:
-                    code += Setup.Compile(context) + "\n";
+                    code += Setup.Compile(context) + "\n"; 
+                    code += $"var {CurrentTick.Compile(context)};\n";
                     code += $"while (true)" + "{\n" +
                            LoopStep.Compile(context) + "\n";
+                    code += $"{CurrentTick.VariableName} ++;\n";
+                    code += $"if({CurrentTick.VariableName} > 10) break;\n";//debug
                     code += $"System.Threading.Thread.Sleep((int)({StepSize.Compile(context)} * 1000));\n";
                     code += "}\n";
                     break;
                 case ScriptLanguage.C:
                     code += Setup.Compile(context) + "\n";
+                    code += $"int {CurrentTick.Compile(context)};\n";
                     code += $"while (true)" + "{\n" +
                            LoopStep.Compile(context) + "\n";
+                    code += $"{CurrentTick.VariableName} ++;\n";
                     code += $"//Sleep((int)({StepSize.Compile(context)} * 1000));\n";
                     code += "}\n";
                     break;
