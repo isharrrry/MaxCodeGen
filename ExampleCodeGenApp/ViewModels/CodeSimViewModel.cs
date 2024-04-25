@@ -50,7 +50,7 @@ namespace ExampleCodeGenApp.ViewModels
         public ReactiveCommand<Unit, Unit> ClearOutput { get; }
         string ScriptSource = "";
         public static List<ScriptLanguage> ScriptLanguages { get; set; } = Enum.GetValues(typeof(ScriptLanguage)).Cast<ScriptLanguage>().ToList();
-        public ScriptLanguage ScriptLanguage { get; set; } = ScriptLanguage.C;
+        public ScriptLanguage ScriptLanguage { get; set; } = ScriptLanguage.CSharp;
         public CodePreviewViewModel CodePreview { get; internal set; }
 
         public CodeSimViewModel()

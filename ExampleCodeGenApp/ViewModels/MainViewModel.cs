@@ -131,6 +131,7 @@ namespace ExampleCodeGenApp.ViewModels
             //NodeList.AddNodeType(() => new ButtonEventNode());
             NodeList.AddNodeType(() => new IntLiteralNode());
             NodeList.AddNodeType(() => new TextLiteralNode());
+            NodeList.AddNodeType(() => new ToStringNode());
             NodeList.AddNodeType(() => new RealtimeNode());
             NodeList.AddNodeType(() => new ForLoopNode());
             NodeList.AddNodeType(() => new PrintNode());
