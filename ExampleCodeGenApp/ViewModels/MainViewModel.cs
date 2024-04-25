@@ -73,16 +73,7 @@ namespace ExampleCodeGenApp.ViewModels
                 Network = new NetworkViewModel()
             });
 
-            ButtonEventNode eventNode = new ButtonEventNode { CanBeRemovedByUser = false };
-            Network.Nodes.Add(eventNode);
-
-            //NodeList.AddNodeType(() => new ButtonEventNode());
-            NodeList.AddNodeType(() => new ForLoopNode());
-            NodeList.AddNodeType(() => new IntLiteralNode());
-            NodeList.AddNodeType(() => new PrintNode());
-            NodeList.AddNodeType(() => new TextLiteralNode());
-
-            ButtonEventNodeInit(eventNode);
+            LoadProgramNode();
 
             ForceDirectedLayouter layouter = new ForceDirectedLayouter();
             AutoLayout = ReactiveCommand.Create(() => layouter.Layout(new Configuration { Network = Network }, 10000));
@@ -128,6 +119,22 @@ namespace ExampleCodeGenApp.ViewModels
                     Name = selectedGroupNode.Name
                 });
             }, isGroupNodeSelected);
+        }
+
+        private void LoadProgramNode()
+        {
+            ButtonEventNode eventNode = new ButtonEventNode { CanBeRemovedByUser = false };
+            Network.Nodes.Add(eventNode);
+            ButtonEventNodeInit(eventNode);
+
+            //NodeList.AddNodeType(() => new ButtonEventNode());
+            NodeList.AddNodeType(() => new IntLiteralNode());
+            NodeList.AddNodeType(() => new TextLiteralNode());
+            NodeList.AddNodeType(() => new RealtimeNode());
+            NodeList.AddNodeType(() => new ForLoopNode());
+            NodeList.AddNodeType(() => new PrintNode());
+
+
         }
 
         private void ButtonEventNodeInit(ButtonEventNode eventNode)

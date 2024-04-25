@@ -15,12 +15,15 @@
         <Label Content="Run" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="18" FontFamily="Segoe UI Semilight" Grid.RowSpan="2"/>
 
         <StackPanel Grid.Row="1" Margin="10,10,10,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Orientation="Horizontal">
-            <Button x:Name="runButton" HorizontalAlignment="Left" Content="Trigger"/>
-            <Button x:Name="clearButton" HorizontalAlignment="Left" Content="Clear output" Margin="10, 0, 0, 0"/>
+            <Button x:Name="genButton" HorizontalAlignment="Left" Content="编码" Margin="10, 0, 0, 0"/>
+            <Button x:Name="buildButton" HorizontalAlignment="Left" Content="编译" Margin="10, 0, 0, 0"/>
+            <Button x:Name="runButton" HorizontalAlignment="Left" Content="运行" Margin="10, 0, 0, 0"/>
+            <Button x:Name="stopButton" HorizontalAlignment="Left" Content="停止" Margin="10, 0, 0, 0"/>
+            <Button x:Name="clearButton" HorizontalAlignment="Left" Content="清空输出" Margin="10, 0, 0, 0"/>
         </StackPanel>
         <Grid Grid.Row="2" Margin="10,10,10,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <TextBlock x:Name="outputTextBlock"/>
+                <TextBlock x:Name="outputTextBlock" TextWrapping="Wrap"/>
             </ScrollViewer>
         </Grid>
     </Grid>
