@@ -42,7 +42,7 @@ namespace ExampleCodeGenApp.Views
             InitializeComponent();
 
             this.WhenActivated(d => { 
-                this.OneWayBind(ViewModel, vm => vm.CompiledCode, v => v.codeTextBlock.Text).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.PreViewCode, v => v.codeTextBlock.Text).DisposeWith(d);
                 this.OneWayBind(ViewModel, vm => vm.CompilerError, v => v.errorTextBlock.Text).DisposeWith(d);
             });
         }

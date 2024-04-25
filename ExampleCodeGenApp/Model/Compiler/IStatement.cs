@@ -1,7 +1,6 @@
 ﻿namespace ExampleCodeGenApp.Model.Compiler
 {
-    public interface IStatement
+    public interface IStatement : IProgram
     {
-        string Compile(CompilerContext context);
     }
 }

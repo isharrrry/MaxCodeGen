@@ -22,11 +22,26 @@ namespace ExampleCodeGenApp.Model
             
             CurrentTick.Value = new IntLiteral { Value = 0 };
             string code = "";
-            code += Setup.Compile(context) + "\n";
-            code += $"while (true)" + "{\n" +
-                   LoopStep.Compile(context) + "\n";
-            code += $"System.Threading.Thread.Sleep((int)({StepSize.Compile(context)} * 1000));\n";
-            code += "}\n";
+            switch (context.ScriptLanguage)
+            {
+                case ScriptLanguage.CSharp:
+                    code += Setup.Compile(context) + "\n";
+                    code += $"while (true)" + "{\n" +
+                           LoopStep.Compile(context) + "\n";
+                    code += $"System.Threading.Thread.Sleep((int)({StepSize.Compile(context)} * 1000));\n";
+                    code += "}\n";
+                    break;
+                case ScriptLanguage.C:
+                    code += Setup.Compile(context) + "\n";
+                    code += $"while (true)" + "{\n" +
+                           LoopStep.Compile(context) + "\n";
+                    code += $"//Sleep((int)({StepSize.Compile(context)} * 1000));\n";
+                    code += "}\n";
+                    break;
+                case ScriptLanguage.Lua:
+                default:
+                    throw new NotImplementedException();
+            }
 
             context.LeaveScope();
             return code;

@@ -14,6 +14,10 @@ using ReactiveUI;
 
 namespace ExampleCodeGenApp.ViewModels.Nodes
 {
+    /// <summary>
+    /// ValueNodeInputViewModel 、 ValueNodeOutputViewModel 是IProgram作为Value的容器
+    /// 输入值换了ITypedExpression后，IStatement值会重新生成FunctionCall对象（基于ITypedExpression的引用的对象）
+    /// </summary>
     public class PrintNode : CodeGenNodeViewModel
     {
         static PrintNode()

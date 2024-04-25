@@ -23,7 +23,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 
         public ButtonEventNode() : base(NodeType.EventNode)
         {
-            this.Name = "Button Events";
+            this.Name = "Main";
 
             OnClickFlow = new CodeGenListInputViewModel<IStatement>(PortType.Execution)
             {

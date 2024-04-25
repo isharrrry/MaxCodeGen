@@ -64,6 +64,7 @@ namespace ExampleCodeGenApp.ViewModels
 
         public MainViewModel()
         {
+            CodeSim.CodePreview = CodePreview;
             this.WhenAnyValue(vm => vm.NetworkBreadcrumbBar.ActiveItem).Cast<NetworkBreadcrumb>()
                 .Select(b => b?.Network)
                 .ToProperty(this, vm => vm.Network, out _network);
@@ -140,7 +141,7 @@ namespace ExampleCodeGenApp.ViewModels
         private void ButtonEventNodeInit(ButtonEventNode eventNode)
         {
             var codeObservable = eventNode.OnClickFlow.Values.Connect().Select(_ => new StatementSequence(eventNode.OnClickFlow.Values.Items));
-            codeObservable.BindTo(this, vm => vm.CodePreview.Code);
+            //codeObservable.BindTo(this, vm => vm.CodePreview.Code);
             codeObservable.BindTo(this, vm => vm.CodeSim.Code);
         }
 
@@ -227,9 +228,12 @@ namespace ExampleCodeGenApp.ViewModels
 
             //// 将对象序列化为YAML字符串
             //string yaml = serializer.Serialize(Network);
-            ;
-            var yaml = Serialize();
-            File.WriteAllText("All.yml", yaml);
+
+            if(MessageBox.Show("是否保存？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                var yaml = Serialize();
+                File.WriteAllText("All.yml", yaml);
+            }
         }
 
         private void SerializerBuilderWith(SerializerBuilder serializer)

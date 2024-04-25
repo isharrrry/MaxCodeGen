@@ -14,7 +14,13 @@ namespace ExampleCodeGenApp.Model
 
         public string Compile(CompilerContext context)
         {
-            return $"{FunctionName}({String.Join(", ", Parameters.Select(p => p.Compile(context)))});\n";
+            switch (context.ScriptLanguage)
+            {
+                case ScriptLanguage.CSharp:
+                case ScriptLanguage.C:
+                default:
+                    return $"{FunctionName}({String.Join(", ", Parameters.Select(p => p.Compile(context)))});\n";
+            }
         }
     }
 }

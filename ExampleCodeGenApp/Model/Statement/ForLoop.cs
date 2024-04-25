@@ -35,10 +35,30 @@ namespace ExampleCodeGenApp.Model
             context.EnterNewScope("For loop");
 
             CurrentIndex.Value = LowerBound;
-            string code = $"for(int i = {LowerBound.Compile(context)}; i < {UpperBound.Compile(context)}; i ++)" + "{\n" +
-                   LoopBody.Compile(context) + "\n" +
-                   "}\n" +
-                   LoopEnd.Compile(context) + "\n";
+            string code = "";
+            switch (context.ScriptLanguage)
+            {
+                case ScriptLanguage.CSharp:
+                    code = $"for(int i = {LowerBound.Compile(context)}; i < {UpperBound.Compile(context)}; i ++)" + "{\n" +
+                           LoopBody.Compile(context) + "\n" +
+                           "}\n" +
+                           LoopEnd.Compile(context) + "\n";
+                    break;
+                case ScriptLanguage.C:
+                    code = $"int i;\nfor(i = {LowerBound.Compile(context)}; i < {UpperBound.Compile(context)}; i ++)" + "{\n" +
+                           LoopBody.Compile(context) + "\n" +
+                           "}\n" +
+                           LoopEnd.Compile(context) + "\n";
+                    break;
+                case ScriptLanguage.Lua:
+                    code = $"for {CurrentIndex.Compile(context)}, {UpperBound.Compile(context)} do\n" +
+                           LoopBody.Compile(context) + "\n" +
+                           $"end\n" +
+                           LoopEnd.Compile(context) + "\n";
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
 
             context.LeaveScope();
             return code;

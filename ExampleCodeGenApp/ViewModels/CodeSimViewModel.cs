@@ -49,6 +49,9 @@ namespace ExampleCodeGenApp.ViewModels
         public ReactiveCommand<Unit, Unit> StopScript { get; }
         public ReactiveCommand<Unit, Unit> ClearOutput { get; }
         string ScriptSource = "";
+        public static List<ScriptLanguage> ScriptLanguages { get; set; } = Enum.GetValues(typeof(ScriptLanguage)).Cast<ScriptLanguage>().ToList();
+        public ScriptLanguage ScriptLanguage { get; set; } = ScriptLanguage.C;
+        public CodePreviewViewModel CodePreview { get; internal set; }
 
         public CodeSimViewModel()
         {
@@ -70,9 +73,10 @@ namespace ExampleCodeGenApp.ViewModels
                 Output = $"生成开始...";
                 //Script script = new Script();
                 //script.Globals["print"] = (Action<string>)Print;
-                ScriptSource = Code.Compile(new CompilerContext());
+                ScriptSource = Code.Compile(new CompilerContext() { ScriptLanguage = this.ScriptLanguage });
+                CodePreview.PreViewCode = ScriptSource;
                 File.WriteAllText("Script/ScriptSource.yml", ScriptSource);
-                Output = $"生成结束！脚本共{GetLineCount(ScriptSource)}！";
+                Output = $"生成结束！脚本共{GetLineCount(ScriptSource)}行！";
             }
             catch (Exception ex)
             {

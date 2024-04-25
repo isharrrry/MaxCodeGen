@@ -28,11 +28,13 @@ namespace ExampleCodeGenApp.ViewModels
             set => this.RaiseAndSetIfChanged(ref _compilerError, value);
         }
         private string _compilerError;
+        private string preViewCode = "";
         #endregion
 
         #region CompiledCode
         private readonly ObservableAsPropertyHelper<string> _compiledCode;
-        public string CompiledCode => _compiledCode.Value; 
+        public string CompiledCode => _compiledCode.Value;
+        public string PreViewCode { get => preViewCode; set => this.RaiseAndSetIfChanged(ref preViewCode, value); }
         #endregion
 
         public CodePreviewViewModel()

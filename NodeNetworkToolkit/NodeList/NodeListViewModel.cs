@@ -100,7 +100,7 @@ namespace NodeNetwork.Toolkit.NodeList
 
         public NodeListViewModel()
         {
-            Title = "Add node";
+            Title = "Add Block";
             EmptyLabel = "No matching nodes found.";
             Display = DisplayMode.Tiles;
 

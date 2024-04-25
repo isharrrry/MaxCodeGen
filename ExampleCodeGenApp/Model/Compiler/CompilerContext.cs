@@ -17,9 +17,11 @@ namespace ExampleCodeGenApp.Model.Compiler
             Identifier = identifier;
         }
     }
-
+    public enum ScriptLanguage { CSharp, C, Lua }
     public class CompilerContext
     {
+        public ScriptLanguage ScriptLanguage { get; set; }
+
         public Stack<ScopeDefinition> VariablesScopesStack { get; } = new Stack<ScopeDefinition>();
         
         public string FindFreeVariableName()
