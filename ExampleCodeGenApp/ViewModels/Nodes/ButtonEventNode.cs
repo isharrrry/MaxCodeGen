@@ -27,7 +27,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 
             OnClickFlow = new CodeGenListInputViewModel<IStatement>(PortType.Execution)
             {
-                Name = "On Click"
+                Name = "Init"
             };
 
             this.Inputs.Add(OnClickFlow);

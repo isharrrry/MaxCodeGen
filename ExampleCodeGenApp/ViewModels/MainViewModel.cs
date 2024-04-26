@@ -95,6 +95,8 @@ namespace ExampleCodeGenApp.ViewModels
             GroupNodes = ReactiveCommand.Create(() =>
             {
                 var groupBinding = (CodeNodeGroupIOBinding)grouper.MergeIntoGroup(Network, Network.SelectedNodes.Items);
+                if (groupBinding == null)
+                    return;
                 ((GroupNodeViewModel)groupBinding.GroupNode).IOBinding = groupBinding;
                 ((GroupSubnetIONodeViewModel)groupBinding.EntranceNode).IOBinding = groupBinding;
                 ((GroupSubnetIONodeViewModel)groupBinding.ExitNode).IOBinding = groupBinding;
@@ -130,6 +132,7 @@ namespace ExampleCodeGenApp.ViewModels
 
             //NodeList.AddNodeType(() => new ButtonEventNode());
             NodeList.AddNodeType(() => new IntLiteralNode());
+            NodeList.AddNodeType(() => new DoubleLiteralNode());
             NodeList.AddNodeType(() => new TextLiteralNode());
             NodeList.AddNodeType(() => new ToStringNode());
             NodeList.AddNodeType(() => new RealtimeNode());
@@ -141,6 +144,9 @@ namespace ExampleCodeGenApp.ViewModels
 
         private void ButtonEventNodeInit(ButtonEventNode eventNode)
         {
+            //按钮EFlow连线后获取OnClickFlow连接的所有子声明列表作为声明，用于生成代码
+            //比如EFlow连接到PrintNode，获取的是PrintNode的Outputs端口的Flow.Value即FunctionCall声明
+            //所有模块的输出EFlow作为上一层的输入，所以ButtonEventNode拿到所有声明列表，执行这个列表才能执行整个流程
             var codeObservable = eventNode.OnClickFlow.Values.Connect().Select(_ => new StatementSequence(eventNode.OnClickFlow.Values.Items));
             //codeObservable.BindTo(this, vm => vm.CodePreview.Code);
             codeObservable.BindTo(this, vm => vm.CodeSim.Code);

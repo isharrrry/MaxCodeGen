@@ -336,10 +336,12 @@ namespace NodeNetwork.Toolkit
                     {
                         NodeViewModel connectedNode = con.Input.Parent;
 
-                        if (groupNodesSet.Contains(connectedNode) && !groupNodesSet.Contains(cur))
+                        //if (groupNodesSet.Contains(connectedNode) && !groupNodesSet.Contains(cur))
+                        if (!groupNodesSet.Contains(connectedNode))
                         {
                             //Found transision from outside to inside
-                            return false;
+                            //return false;
+                            continue;
                         }
 
                         if (!visitedNodes.Add(connectedNode))

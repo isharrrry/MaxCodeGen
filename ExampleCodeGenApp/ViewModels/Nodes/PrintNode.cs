@@ -44,6 +44,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 Name = "",
                 Value = this.Text.ValueChanged.Select(stringExpr => new FunctionCall
                 {
+                    //应该把FunctionCall封装为print，每个语言自己打印
                     //FunctionName = "print",
                     FunctionName = "Console.WriteLine",
                     Parameters =

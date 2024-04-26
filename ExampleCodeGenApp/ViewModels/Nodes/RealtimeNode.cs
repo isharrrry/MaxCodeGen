@@ -76,10 +76,10 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             FlowIn = new CodeGenOutputViewModel<IStatement>(PortType.Execution)
             {
                 Name = "",
-                Value = Observable.CombineLatest(loopStepChanged, setupChanged, StepSizeValueEditor.ValueChanged,
+                Value = Observable.CombineLatest(loopStepChanged, setupChanged, StepSizeValueEditor.ValueChanged,//根据这三个对象Select得到Realtime
                         (loopStepChange, setupChange, setpSize) => (loopStepChange, setupChange, setpSize))
                             .Select(v => {
-                                task.LoopStep = new StatementSequence(LoopStepFlow.Values.Items);
+                                task.LoopStep = new StatementSequence(LoopStepFlow.Values.Items);//拿到EFlow连接的所有声明列表
                                 task.Setup = new StatementSequence(SetupFlow.Values.Items);
                                 task.StepSize = new DoubleLiteral { Value = v.setpSize };
                                 return task; 

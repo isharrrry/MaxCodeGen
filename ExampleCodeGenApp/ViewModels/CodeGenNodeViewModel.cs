@@ -22,11 +22,14 @@ namespace ExampleCodeGenApp.ViewModels
             Splat.Locator.CurrentMutable.Register(() => new CodeGenNodeView(), typeof(IViewFor<CodeGenNodeViewModel>));
         }
 
-        public NodeType NodeType { get; }
+        public NodeType NodeType { get; set; }
 
         public CodeGenNodeViewModel(NodeType type)
         {
             NodeType = type;
+        }
+        public CodeGenNodeViewModel()
+        {
         }
     }
 }
