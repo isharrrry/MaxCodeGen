@@ -37,11 +37,15 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 IsExpression = true,
                 PortType = PortType.Double,
             };
-            OutConfigDic["Out"] = new NodeOutConfig() { 
+            OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
                 PortType = PortType.Double,
+                DataType = "double",
+                DataValue = "0",
             };
-            OutConfigDic["Out"].ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"([In] * [Out])";//应该拿到Editor的更新值替代 * 1，然后绑定输入连接时也更新
+            ParamDic["GainVal"] = "2.2";
+            //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新
+            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"([In] * [GainVal])";
             LoadPorts();
         }
     }

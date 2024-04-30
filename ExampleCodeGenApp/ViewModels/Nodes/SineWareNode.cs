@@ -27,7 +27,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
         public DoubleValueEditorViewModel ValueEditor { get; } = new DoubleValueEditorViewModel();
 
         [YamlIgnore]
-        public ValueNodeOutputViewModel<IExpression> Output { get; }
+        public ValueNodeOutputViewModel<IProgram> Output { get; }
 
         public double IValue { get => ValueEditor.Value; set => ValueEditor.Value = value; }
 
@@ -35,7 +35,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
         {
             this.Name = "SineWare";
 
-            Output = new CodeGenOutputViewModel<IExpression>(PortType.Double)
+            Output = new CodeGenOutputViewModel<IProgram>(PortType.Double)
             {
                 Editor = ValueEditor,
                 Value = ValueEditor.ValueChanged.Select(v => new BaseExpressionLiteral

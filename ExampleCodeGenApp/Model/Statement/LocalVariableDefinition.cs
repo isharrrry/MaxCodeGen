@@ -12,16 +12,21 @@ namespace ExampleCodeGenApp.Model
     /// 生命带类型的变量，怎么解决不同语言类型不同问题？
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LocalVariableDefinition<T> : ITypedVariableDefinition<T>
+    public class LocalVariableDefinition: IVariableDefinition//<T> : ITypedVariableDefinition<T>
     {
-        public string VariableName { get; private set; }
-        public string Value { get; set; }
+        public BaseExpressionLiteral VariableNameExpression { get; set; } = new BaseExpressionLiteral();
         public string DataType { get; set; } = "";
+        public string VariableName { get => VariableNameExpression.Value; set => VariableNameExpression.Value=value; }
+        public string Value { get; set; }
+        public delegate string CompileHandle(CompilerContext ctx);
+        public CompileHandle CompileEvent;
 
         public string Compile(CompilerContext context)
         {
-            VariableName = context.FindFreeVariableName();
-            context.AddVariableToCurrentScope(this); switch (context.ScriptLanguage)
+            if(VariableName == null)
+                VariableName = context.FindFreeVariableName();
+            context.AddVariableToCurrentScope(this); 
+            switch (context.ScriptLanguage)
             {
                 case ScriptLanguage.CSharp:
                 case ScriptLanguage.C:
@@ -31,6 +36,7 @@ namespace ExampleCodeGenApp.Model
                 default:
                     throw new NotImplementedException();
             }
+            CompileEvent?.Invoke(context);//附加的代码
         }
     }
 }
