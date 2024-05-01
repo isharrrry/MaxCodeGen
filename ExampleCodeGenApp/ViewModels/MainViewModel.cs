@@ -138,6 +138,8 @@ namespace ExampleCodeGenApp.ViewModels
             NodeList.AddNodeType(() => new RealtimeNode());
             NodeList.AddNodeType(() => new ForLoopNode());
             NodeList.AddNodeType(() => new PrintNode());
+            NodeList.AddNodeType(() => new SineWaveNode());
+            NodeList.AddNodeType(() => new GainNode());
 
 
         }
@@ -147,9 +149,17 @@ namespace ExampleCodeGenApp.ViewModels
             //按钮EFlow连线后获取OnClickFlow连接的所有子声明列表作为声明，用于生成代码
             //比如EFlow连接到PrintNode，获取的是PrintNode的Outputs端口的Flow.Value即FunctionCall声明
             //所有模块的输出EFlow作为上一层的输入，所以ButtonEventNode拿到所有声明列表，执行这个列表才能执行整个流程
-            var codeObservable = eventNode.OnClickFlow.Values.Connect().Select(_ => new StatementSequence(eventNode.OnClickFlow.Values.Items));
-            //codeObservable.BindTo(this, vm => vm.CodePreview.Code);
-            codeObservable.BindTo(this, vm => vm.CodeSim.Code);
+            if (true)
+            {
+                //EFlow
+                var codeObservable = eventNode.OnClickFlow.Values.Connect().Select(_ => new StatementSequence(eventNode.OnClickFlow.Values.Items));
+                //codeObservable.BindTo(this, vm => vm.CodePreview.Code);
+                codeObservable.BindTo(this, vm => vm.CodeSim.Code);
+            }
+            else
+            {
+
+            }
         }
 
         static List<Type> WithTypeMappingSet;
@@ -197,6 +207,8 @@ namespace ExampleCodeGenApp.ViewModels
         {
             try
             {
+                CodeSim.Network = Network;
+
                 var obj = Deserialize<NetworkConfig>(File.ReadAllText("All.yml"));
                 Network.Nodes.Clear();
                 foreach (var item in obj.Nodes)

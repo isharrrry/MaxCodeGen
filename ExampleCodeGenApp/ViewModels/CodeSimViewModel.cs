@@ -20,6 +20,9 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using ExampleCodeGenApp.Views;
+using NodeNetwork.ViewModels;
+using ExampleCodeGenApp.ViewModels.Nodes;
+using NodeNetwork.Toolkit.ValueNode;
 
 namespace ExampleCodeGenApp.ViewModels
 {
@@ -51,7 +54,10 @@ namespace ExampleCodeGenApp.ViewModels
         string ScriptSource = "";
         public static List<ScriptLanguage> ScriptLanguages { get; set; } = Enum.GetValues(typeof(ScriptLanguage)).Cast<ScriptLanguage>().ToList();
         public ScriptLanguage ScriptLanguage { get; set; } = ScriptLanguage.CSharp;
+        public static List<ScriptMode> ScriptModes { get; set; } = Enum.GetValues(typeof(ScriptMode)).Cast<ScriptMode>().ToList();
+        public ScriptMode ScriptMode { get; set; } = ScriptMode.数据流;
         public CodePreviewViewModel CodePreview { get; internal set; }
+        public NetworkViewModel Network { get; internal set; }
 
         public CodeSimViewModel()
         {
@@ -73,7 +79,82 @@ namespace ExampleCodeGenApp.ViewModels
                 Output = $"生成开始...";
                 //Script script = new Script();
                 //script.Globals["print"] = (Action<string>)Print;
-                ScriptSource = Code.Compile(new CompilerContext() { ScriptLanguage = this.ScriptLanguage });
+                if(ScriptMode == ScriptMode.数据流)
+                {
+                    //生成,没有做对没连接完整的报错
+                    //拿到dflow节点：如果不是main节点且连接表有一端是这个节点的IStatement端口
+                    var eflowNodes = new List<NodeViewModel>();
+                    foreach (var node in Network.Nodes.Items)
+                    {
+                        if(node is not ButtonEventNode)
+                        {
+                            bool add = true;
+                            foreach (var conn in Network.Connections.Items)
+                            {
+                                //找到节点的连线，判断是否是eflow连线
+                                //eflow连线的特点为里面的Value类型为声明
+                                if (conn.Input.Parent == node)
+                                {
+                                    if (conn.Input.ObjValue is IStatement || conn.Input is ValueNodeInputViewModel<IStatement>)
+                                    {
+                                        add = false;
+                                        break;
+                                    }
+                                }
+                                else if (conn.Output.Parent == node)
+                                {
+                                    if (conn.Output is ValueNodeOutputViewModel<IStatement>)//(conn.Output.ObjValue is IStatement)
+                                    {
+                                        add = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (add)
+                            {
+                                eflowNodes.Add(node);
+                            }
+                        }
+                    }
+                    //生成代码顺序算法处理
+                    var codeEflowNodes = GetOrderEflowNodes(eflowNodes);
+                    var ctx = new CompilerContext()
+                    {
+                        ScriptLanguage = this.ScriptLanguage,
+                        ScriptMode = this.ScriptMode
+                    };
+                    var codes = "";
+                    if (eflowNodes.Count != 0)
+                    {
+                        codes += $"//{eflowNodes.Count}个节点没有被排序到代码生成\n";
+                    }
+                    ctx.EnterNewScope("Main");
+                    foreach (var node in codeEflowNodes)
+                    {
+                        if (node is BaseCodeGenNodeViewModel bNode)
+                        {
+                            codes += (bNode.CompileEvent(ctx) + "\n");
+                        }
+                        //foreach (var output in node.Outputs.Items)
+                        //{
+                        //    if (output is ValueNodeOutputViewModel<IExpression> epVm)
+                        //    {
+                        //        epVm.Value.ForEach(x =>
+                        //            codes += (x.Compile(ctx) + "\n"));
+                        //    }
+                        //}
+                    }
+                    ctx.LeaveScope();
+                    ScriptSource = codes;
+                }
+                else
+                {
+                    ScriptSource = Code.Compile(new CompilerContext()
+                    {
+                        ScriptLanguage = this.ScriptLanguage,
+                        ScriptMode = this.ScriptMode
+                    });
+                }
                 CodePreview.PreViewCode = ScriptSource;
                 File.WriteAllText("Script/ScriptSource.yml", ScriptSource);
                 Output = $"生成结束！脚本共{GetLineCount(ScriptSource)}行！";
@@ -82,6 +163,76 @@ namespace ExampleCodeGenApp.ViewModels
             {
                 Output = ex.ToString();
             }
+        }
+
+        private List<NodeViewModel> GetOrderEflowNodes(List<NodeViewModel> eflowNodes)
+        {
+            List<NodeViewModel> orderNodes = new List<NodeViewModel> { };
+            //空输入
+            var eflowNodesls = eflowNodes.ToList();
+            foreach (var node in eflowNodesls)
+            {
+                if (node.Inputs.Items.Count() == 0)
+                    ItemFromMoveTo(node, eflowNodes, orderNodes);
+                else
+                {
+                    //这个节点的输入没有被连接
+                    if (IsFreeInputNode(node))
+                        ItemFromMoveTo(node, eflowNodes, orderNodes);
+                }
+            }
+            //所有输入数据源节点来自orderNodes
+            bool freeMove = false;
+            while (!freeMove)
+            {
+                freeMove = true;
+                var ls = eflowNodes.ToList();
+                foreach (var node in ls)
+                {
+                    var FreeOrInputFormOrder = node.Inputs.Items.Select(x => {
+                        return (IsInputConnOrderSet(x, orderNodes, true));
+                    });
+                    if (FreeOrInputFormOrder.All(x => x == true))
+                    {
+                        ItemFromMoveTo(node, eflowNodes, orderNodes);
+                        freeMove = false;
+                    }
+                }
+            }
+            return orderNodes;
+        }
+        //输入连接到有序节点或者未连接
+        private bool IsInputConnOrderSet(NodeInputViewModel x, List<NodeViewModel> orderNodes, bool OrFreeConn = true)
+        {
+            foreach (var conn in Network.Connections.Items)
+            {
+                if (conn.Input == x)
+                {
+                    return orderNodes.IndexOf(conn.Output.Parent) != -1;
+                }
+            }
+            return OrFreeConn;
+        }
+
+        //这个节点的输入没有被连接
+        private bool IsFreeInputNode(NodeViewModel node)
+        {
+            bool FreeInput = true;
+            foreach (var conn in Network.Connections.Items)
+            {
+                if (conn.Input.Parent == node)
+                {
+                    FreeInput = false;
+                    break;
+                }
+            }
+            return FreeInput;
+        }
+
+        private void ItemFromMoveTo(NodeViewModel item, List<NodeViewModel> oldSet, List<NodeViewModel> newSet)
+        {
+            oldSet.Remove(item);
+            newSet.Add(item);
         }
 
         private void BuildScriptExec()

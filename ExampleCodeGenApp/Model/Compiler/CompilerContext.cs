@@ -18,12 +18,14 @@ namespace ExampleCodeGenApp.Model.Compiler
         }
     }
     public enum ScriptLanguage { CSharp, C, Lua }
+    public enum ScriptMode {  数据流, 过程 }
     public class CompilerContext
     {
         public ScriptLanguage ScriptLanguage { get; set; }
 
         public Stack<ScopeDefinition> VariablesScopesStack { get; } = new Stack<ScopeDefinition>();
-        
+        public ScriptMode ScriptMode { get; set; } = ScriptMode.数据流;
+
         /// <summary>
         /// 分配变量名/生成变量名
         /// </summary>

@@ -36,6 +36,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             {
                 IsExpression = true,
                 PortType = PortType.Double,
+                DataValue = "0",
             };
             OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
@@ -45,7 +46,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             };
             ParamDic["GainVal"] = "2.2";
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新
-            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"([In] * [GainVal])";
+            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"[Out] = ([In] * [GainVal]);";
             LoadPorts();
         }
     }

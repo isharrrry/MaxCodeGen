@@ -22,6 +22,7 @@ namespace NodeNetwork.ViewModels
         {
             NNViewRegistrar.AddRegistration(() => new NodeOutputView(), typeof(IViewFor<NodeOutputViewModel>));
         }
+        public object ObjValue { get; set; }
 
         #region Logger
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);

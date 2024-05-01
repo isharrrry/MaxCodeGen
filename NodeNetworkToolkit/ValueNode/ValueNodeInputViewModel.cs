@@ -88,6 +88,10 @@ namespace NodeNetwork.Toolkit.ValueNode
             ValueChanged = Observable
                 .Defer(() => Observable.Return(Value))
                 .Concat(valueChanged);
+            ValueChanged.Select(
+                v => 
+                ObjValue = _value
+            );
         }
 
         private IObservable<T> GenerateConnectedValuesBinding(ValidationAction connectionChangedValidationAction, ValidationAction connectedValueChangedValidationAction)

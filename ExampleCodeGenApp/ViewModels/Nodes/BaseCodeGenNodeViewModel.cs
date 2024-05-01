@@ -14,7 +14,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 {
     /// <summary>
     /// 运行时的代码效果是：把所有输出节点、testpoint、尾巴节点（可跳过），依次解算更新到结构体，如果前面解算了则传递值。
-    /// 
+    /// 输入由节点CompileEvent生成，输出由遍历生成（顺带对节点CompileEvent生成）
     /// </summary>
     public class BaseCodeGenNodeViewModel : CodeGenNodeViewModel
     {
@@ -26,6 +26,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
         public string CompileEvent(CompilerContext ctx)
         {
             var ScriptLanguage = ctx.ScriptLanguage.ToString();
+            var VarDefStatement = "";
             if (ScriptTempDic.ContainsKey(ScriptLanguage))
             {
                 var codeTemp = ScriptTempDic[ScriptLanguage];
@@ -39,24 +40,32 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                         continue;
                     if(inport.Value.Port is CodeGenInputViewModel<IExpression> cgep)
                     {
-                        //输入的表达式
-                        var ep = cgep.Value.Compile(ctx);
-                        codeTemp = codeTemp.Replace($"[{inport.Key}]", ep);
+                        if(cgep.Value == null)
+                            codeTemp = codeTemp.Replace($"[{inport.Key}]", inport.Value.DataValue);
+                        else
+                        {
+                            //输入的表达式
+                            var ep = cgep.Value.Compile(ctx);
+                            codeTemp = codeTemp.Replace($"[{inport.Key}]", ep);
+                        }
                     }
                 }
                 foreach (var outport in OutConfigDic)
                 {
                     if (outport.Value.IsExpression == false)
                         continue;
-                    var ep = outport.Value.ToString();
-                    codeTemp = codeTemp.Replace($"[{outport.Key}]", ep);
 
                     //输出的定义
-                    var vardef = OutConfigDic[ScriptLanguage].VarDef;
-                    vardef.VariableName = outport.Key + "_" + ctx.FindFreeVariableName();
-                    vardef.Compile(ctx);
+                    var vardef = outport.Value.VarDef;
+                    //if(vardef.VariableName == null)
+                    {
+                        vardef.VariableName = outport.Key + "_" + ctx.FindFreeVariableName();
+                        VarDefStatement += vardef.Compile(ctx);
+                    }
+                    var ep = vardef.VariableName;
+                    codeTemp = codeTemp.Replace($"[{outport.Key}]", ep);
                 }
-                return codeTemp;
+                return VarDefStatement + codeTemp;
             }
             throw new NotImplementedException();
         }
@@ -110,7 +119,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     var vm = new CodeGenOutputViewModel<IExpression>(cfg.PortType)
                     {
                         Name = outkv.Key,
-                        Value = this.WhenAnyValue(vm => cfg.VarDef.VariableNameExpression)
+                        Value = Observable.Return(cfg.VarDef.VariableNameExpression)//this.WhenAnyValue(v => cfg.VarDef.VariableNameExpression)
                     };
                     cfg.Port = vm;
                     //cfg.CreateValueEditor(vm);//输出初值编辑生成表达式过程
@@ -131,8 +140,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 }
             }
             //主代码附加
-            if (Last != null)
-                Last.VarDef.CompileEvent = CompileEvent;
+            //if (Last != null)
+            //    Last.VarDef.CompileEvent = CompileEvent;
 
         }
     }
@@ -148,6 +157,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
     {
         [YamlIgnore]
         public NodeInputViewModel Port { get; set; }
+        public string DataValue { get; set; }
     }
 
     public class NodeOutConfig : NodePortConfig

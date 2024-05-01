@@ -16,7 +16,7 @@ namespace ExampleCodeGenApp.Model
             switch (context.ScriptLanguage)
             {
                 case ScriptLanguage.CSharp:
-                    return $"{Expression.Compile(context)}.ToString()";
+                    return Expression != null ? $"{Expression.Compile(context)}.ToString()" : "";
                 case ScriptLanguage.C:
                     return $"\"\" + {Expression.Compile(context)}";
                 default:
