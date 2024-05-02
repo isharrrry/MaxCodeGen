@@ -14,8 +14,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ExampleCodeGenApp.ViewModels;
+using ExampleCodeGenApp.ViewModels.Nodes;
 using NodeNetwork.Views;
 using ReactiveUI;
+using Xceed.Wpf.Toolkit.PropertyGrid;
 
 namespace ExampleCodeGenApp.Views
 {
@@ -49,6 +51,34 @@ namespace ExampleCodeGenApp.Views
 
                 this.OneWayBind(ViewModel, vm => vm.NodeType, v => v.NodeView.Background, ConvertNodeTypeToBrush).DisposeWith(d);
             });
+            DataContextChanged +=CodeGenNodeView_DataContextChanged;
+            CodeGenNodeView_DataContextChanged(null, new DependencyPropertyChangedEventArgs());
+        }
+
+        private void CodeGenNodeView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (DataContext is BaseCodeGenNodeViewModel BaseCodeVm)
+            {
+                lbSetting.Visibility = Visibility.Visible;
+
+            }
+        }
+
+        private void Label_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            PropertyGrid PG = new PropertyGrid();
+            PG.SelectedObject = (DataContext as BaseCodeGenNodeViewModel)?.ParamPropertyList;
+            PG.SelectedObjectTypeName = DataContext.GetType().Name.ToString();
+            var win = new Window()
+            {
+                Title = "设置模块属性",
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                //SizeToContent="WidthAndHeight"
+                Width = 400,
+                Height = 400,
+                Content = PG,
+            };
+            win.Show();
         }
 
         public static  Brush ConvertNodeTypeToBrush(NodeType type)

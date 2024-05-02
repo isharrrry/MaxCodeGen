@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using Common;
 using DynamicData;
 using ExampleCodeGenApp.Model;
 using ExampleCodeGenApp.Model.Compiler;
@@ -20,9 +21,10 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
     {
         public Dictionary<string, NodeInConfig> InConfigDic = new Dictionary<string, NodeInConfig> { };
         public Dictionary<string, NodeOutConfig> OutConfigDic = new Dictionary<string, NodeOutConfig> { };
-        public Dictionary<string, string> ParamDic = new Dictionary<string, string> { };
-
+        public Dictionary<string, ParamDefine> ParamDic = new Dictionary<string, ParamDefine> { };
+        public Dictionary<string, List<AssemblyConfig>> ScriptAssemblyDic = new Dictionary<string, List<AssemblyConfig>> { };
         public Dictionary<string, string> ScriptTempDic = new Dictionary<string, string> { };
+        public PropertyList ParamPropertyList = new PropertyList();
         public string CompileEvent(CompilerContext ctx)
         {
             var ScriptLanguage = ctx.ScriptLanguage.ToString();
@@ -32,7 +34,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 var codeTemp = ScriptTempDic[ScriptLanguage];
                 foreach (var parmitem in ParamDic)
                 {
-                    codeTemp = codeTemp.Replace($"[{parmitem.Key}]", parmitem.Value);
+                    codeTemp = codeTemp.Replace($"[{parmitem.Key}]", parmitem.Value.DataValue);
                 }
                 foreach (var inport in InConfigDic)
                 {
@@ -143,9 +145,40 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             //if (Last != null)
             //    Last.VarDef.CompileEvent = CompileEvent;
 
+            //参数
+            foreach (var param in ParamDic)
+            {
+                var attr = new PropertyAttr(
+                    param.Value.Name,
+                    param.Value.DataValue,
+                    param.Value.GetType(),
+                    (v) => param.Value.DataValue = v as string
+                );
+                attr.Category = param.Value.Category;
+                attr.Description = param.Value.Description;
+                attr.DisplayName = param.Value.Name;
+                ParamPropertyList.Add(attr);
+            }
         }
     }
 
+    public class ParamDefine
+    {
+        public PortType PortType { get; set; } = PortType.String;
+        public string DataValue { get; set; }
+        public string Name { get; set; }
+        public string Category { get; set; }
+        public string Description { get; set; }
+
+    }
+
+    public class AssemblyConfig
+    {
+        public string Include { get; set; }
+        public string IncludePath { get; set; }
+        public string Lib { get; set; }
+        public string LibPath { get; set; }
+    }
 
     public class NodePortConfig
     {

@@ -44,7 +44,13 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 DataType = "double",
                 DataValue = "0",
             };
-            ParamDic["GainVal"] = "2.2";
+            ParamDic["GainVal"] = new ParamDefine()
+            {
+                PortType = PortType.Double,
+                Name = "倍数",
+                DataValue = "1",
+                Description = "放大倍数",
+            };
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新
             ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"[Out] = ([In] * [GainVal]);";
             LoadPorts();
