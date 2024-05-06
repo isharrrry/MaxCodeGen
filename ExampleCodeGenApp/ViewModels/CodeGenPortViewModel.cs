@@ -10,7 +10,7 @@ namespace ExampleCodeGenApp.ViewModels
 {
     public enum PortType
     {
-        Execution, Integer, String, Double
+        Execution, Integer, String, Double, Float, I8, U8, I16, U16, I32, U32, I64, U64, DataType, DataPack
     }
 
     public class CodeGenPortViewModel : PortViewModel

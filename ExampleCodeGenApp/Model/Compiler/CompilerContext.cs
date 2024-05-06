@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExampleCodeGenApp.ViewModels.Nodes;
 
 namespace ExampleCodeGenApp.Model.Compiler
 {
@@ -25,6 +26,9 @@ namespace ExampleCodeGenApp.Model.Compiler
 
         public Stack<ScopeDefinition> VariablesScopesStack { get; } = new Stack<ScopeDefinition>();
         public ScriptMode ScriptMode { get; set; } = ScriptMode.数据流;
+
+        public Dictionary<string, LocalVariableDefinition> GlobalVariables = new Dictionary<string, LocalVariableDefinition> { };
+
 
         /// <summary>
         /// 分配变量名/生成变量名

@@ -23,6 +23,7 @@ using ExampleCodeGenApp.Views;
 using NodeNetwork.ViewModels;
 using ExampleCodeGenApp.ViewModels.Nodes;
 using NodeNetwork.Toolkit.ValueNode;
+using ExampleCodeGenApp.Model;
 
 namespace ExampleCodeGenApp.ViewModels
 {
@@ -86,7 +87,7 @@ namespace ExampleCodeGenApp.ViewModels
                     var eflowNodes = new List<NodeViewModel>();
                     foreach (var node in Network.Nodes.Items)
                     {
-                        if(node is not ButtonEventNode)
+                        if (node is not ButtonEventNode)
                         {
                             bool add = true;
                             foreach (var conn in Network.Connections.Items)
@@ -128,12 +129,28 @@ namespace ExampleCodeGenApp.ViewModels
                     {
                         codes += $"//{eflowNodes.Count}个节点没有被排序到代码生成\n";
                     }
+                    Includes?.Clear();
                     ctx.EnterNewScope("Main");
+                    InitFlowGlobal(ctx);
+                    codes += (ctx.GlobalVariables["SysTimeSec"].Compile(ctx) + "");
+                    codes += (ctx.GlobalVariables["CurrentTick"].Compile(ctx) + "");
+                    codes += (ctx.GlobalVariables["StepSize"].Compile(ctx) + "");
+                    codes += "while (SysTimeSec < (4)) {\n\n";
                     foreach (var node in codeEflowNodes)
                     {
                         if (node is BaseCodeGenNodeViewModel bNode)
                         {
+                            //include字典
+                            if (bNode.ScriptAssemblyDic.ContainsKey(ctx.ScriptLanguage.ToString()))
+                            {
+                                foreach (var cfg in bNode.ScriptAssemblyDic[ctx.ScriptLanguage.ToString()])
+                                {
+                                    Includes[cfg.Include] = (cfg);
+                                }
+                            }
                             codes += (bNode.CompileEvent(ctx) + "\n");
+                            if (codeEflowNodes.Last() == node && bNode.OutConfigDic.Count > 0)
+                                codes += $"Console.WriteLine({bNode.OutConfigDic.Last().Value.VarDef.VariableName}.ToString(\"F2\"));\n";
                         }
                         //foreach (var output in node.Outputs.Items)
                         //{
@@ -144,6 +161,9 @@ namespace ExampleCodeGenApp.ViewModels
                         //    }
                         //}
                     }
+                    //codes += $"Console.WriteLine(SysTimeSec.ToString(\"F2\"));\n";
+                    codes += "\nCurrentTick++;\nSysTimeSec += StepSize;\n}\n";
+
                     ctx.LeaveScope();
                     ScriptSource = codes;
                 }
@@ -165,6 +185,36 @@ namespace ExampleCodeGenApp.ViewModels
             }
         }
 
+        public Dictionary<string, AssemblyConfig> Includes { get; set; } = new Dictionary<string, AssemblyConfig> { };
+        private string GetIncludeCode(CompilerContext ctx)
+        {
+            var code = "";
+            foreach (var include in Includes)
+            {
+                if (ctx.ScriptLanguage == ScriptLanguage.CSharp)
+                    code += $"using {include.Key};\n";
+            }
+            return code;
+        }
+
+        private void InitFlowGlobal(CompilerContext ctx)
+        {
+            var SysTimeSec = new LocalVariableDefinition();
+            SysTimeSec.VariableName = "SysTimeSec";
+            SysTimeSec.DataType = "double";
+            SysTimeSec.Value = "0";
+            ctx.GlobalVariables["SysTimeSec"] = SysTimeSec;
+            var CurrentTick = new LocalVariableDefinition();
+            CurrentTick.VariableName = "CurrentTick";
+            CurrentTick.DataType = "int";
+            CurrentTick.Value = "10";
+            ctx.GlobalVariables["CurrentTick"] = CurrentTick;
+            var StepSize = new LocalVariableDefinition();
+            StepSize.VariableName = "StepSize";
+            StepSize.DataType = "double";
+            StepSize.Value = "0.1";
+            ctx.GlobalVariables["StepSize"] = StepSize;
+        }
         private List<NodeViewModel> GetOrderEflowNodes(List<NodeViewModel> eflowNodes)
         {
             List<NodeViewModel> orderNodes = new List<NodeViewModel> { };
@@ -377,7 +427,16 @@ namespace Test{
                 CodeSimView.Handle.Invoke(() => {
                     Output = $"运行开始...\n";
                 });
+                //include加入代码
                 var scriptOptions = ScriptOptions.Default.WithImports("System");
+                if (Includes.Count > 0)
+                {
+                    var gusing = new List<string> { "System", "System.Linq" };
+                    gusing.AddRange(Includes.Keys);
+                    scriptOptions = ScriptOptions.Default.WithImports(gusing)
+                        .AddReferences("System.Linq")
+                        .AddReferences("System.Net.Sockets");
+                }
                 var scriptState = await CSharpScript.RunAsync(
                     "Console.SetOut(ConsoleWriter);\n\n" + source
                     , scriptOptions

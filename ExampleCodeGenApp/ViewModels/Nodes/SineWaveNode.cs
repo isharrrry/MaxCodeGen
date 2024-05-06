@@ -63,8 +63,15 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 DataValue = "0",
                 Description = "相位（rad）",
             };
+            ParamDic["OutType"] = new ParamDefine()
+            {
+                PortType = PortType.Double,
+                Name = "输出数据类型",
+                DataValue = PortType.Double.ToString(),
+                Description = "输出数据类型",
+            };
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新
-            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"[Out] = [Amp] * Math.Sine([Frequency] * SysTimeSec + [Phase]) + [Bias];";
+            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"[Out] = [Amp] * Math.Sin(Math.PI * 2 * [Frequency] * ([SysTimeSec] + [Phase])) + [Bias];";
             LoadPorts();
         }
     }

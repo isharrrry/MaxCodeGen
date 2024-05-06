@@ -34,7 +34,15 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 var codeTemp = ScriptTempDic[ScriptLanguage];
                 foreach (var parmitem in ParamDic)
                 {
-                    codeTemp = codeTemp.Replace($"[{parmitem.Key}]", parmitem.Value.DataValue);
+                    var value = parmitem.Value.DataValue;
+                    if(parmitem.Value.PortType == PortType.String)
+                    {
+                        if (parmitem.Value.IgnoreWhenEmpty && string.IsNullOrWhiteSpace(value))
+                            value = "";
+                        else
+                            value = $"\"{value}\"";
+                    }
+                    codeTemp = codeTemp.Replace($"[{parmitem.Key}]", value);
                 }
                 foreach (var inport in InConfigDic)
                 {
@@ -67,6 +75,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     var ep = vardef.VariableName;
                     codeTemp = codeTemp.Replace($"[{outport.Key}]", ep);
                 }
+                foreach (var var in ctx.GlobalVariables)
+                    codeTemp = codeTemp.Replace($"[{var.Key}]", var.Value.VariableName);
                 return VarDefStatement + codeTemp;
             }
             throw new NotImplementedException();
@@ -89,29 +99,10 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
         {
         }
 
-        public void LoadPorts()
+        public virtual void LoadPorts()
         {
-            foreach (var inkv in InConfigDic)
-            {
-                var cfg = inkv.Value;
-                if (cfg.IsExpression)
-                {
-                    cfg.Port = new CodeGenInputViewModel<IExpression>(cfg.PortType)
-                    {
-                        Name = inkv.Key
-                    };
-                    this.Inputs.Add(cfg.Port);
-                }
-                else
-                {
-                    //连接下一个EFlow
-                    cfg.Port = new CodeGenInputViewModel<IStatement>(cfg.PortType)
-                    {
-                        Name = inkv.Key
-                    };
-                    this.Inputs.Add(cfg.Port);
-                }
-            }
+            LoadInputPorts();
+            this.Outputs.Clear();
             NodeOutConfig Last = null;
             foreach (var outkv in OutConfigDic)
             {
@@ -146,18 +137,50 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             //    Last.VarDef.CompileEvent = CompileEvent;
 
             //参数
+            ParamPropertyList.Clear();
             foreach (var param in ParamDic)
             {
                 var attr = new PropertyAttr(
                     param.Value.Name,
                     param.Value.DataValue,
                     param.Value.GetType(),
-                    (v) => param.Value.DataValue = v as string
+                    (v) =>
+                    {
+                        param.Value.DataValue = v as string;
+                        if (param.Value.EnPortsUpdate)
+                            LoadPorts();
+                    }
                 );
                 attr.Category = param.Value.Category;
                 attr.Description = param.Value.Description;
                 attr.DisplayName = param.Value.Name;
                 ParamPropertyList.Add(attr);
+            }
+        }
+
+        public virtual void LoadInputPorts()
+        {
+            this.Inputs.Clear();
+            foreach (var inkv in InConfigDic)
+            {
+                var cfg = inkv.Value;
+                if (cfg.IsExpression)
+                {
+                    cfg.Port = new CodeGenInputViewModel<IExpression>(cfg.PortType)
+                    {
+                        Name = inkv.Key
+                    };
+                    this.Inputs.Add(cfg.Port);
+                }
+                else
+                {
+                    //连接下一个EFlow
+                    cfg.Port = new CodeGenInputViewModel<IStatement>(cfg.PortType)
+                    {
+                        Name = inkv.Key
+                    };
+                    this.Inputs.Add(cfg.Port);
+                }
             }
         }
     }
@@ -169,7 +192,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
         public string Name { get; set; }
         public string Category { get; set; }
         public string Description { get; set; }
-
+        public bool EnPortsUpdate { get; set; }
+        public bool IgnoreWhenEmpty { get; internal set; }
     }
 
     public class AssemblyConfig
