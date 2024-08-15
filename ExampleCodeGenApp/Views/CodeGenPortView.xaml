@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <ControlTemplate x:Key="{x:Static local1:CodeGenPortView.ExecutionPortTemplateKey}" TargetType="views:PortView">
             <Viewbox StretchDirection="Both" Stretch="Uniform">
-                <Grid Width="20" Height="20">
+                <Grid Width="20" Height="20" ToolTip="{Binding PortConfig}">
                     <Path Fill="White" Data="M 0 0 L 8 0 L 18 10 L 8 20 L 0 20 Z" HorizontalAlignment="Center"/>
                 </Grid>
             </Viewbox>
@@ -19,7 +19,7 @@
 
         <ControlTemplate x:Key="{x:Static local1:CodeGenPortView.IntegerPortTemplateKey}" TargetType="views:PortView">
             <Viewbox StretchDirection="Both" Stretch="Uniform">
-                <Grid Width="20" Height="20">
+                <Grid Width="20" Height="20" ToolTip="{Binding PortConfig}">
                     <Ellipse Fill="#7cb342" HorizontalAlignment="Left" VerticalAlignment="Center" Height="15" Width="15"/>
                     <Path Fill="#7cb342" Data="M 0 0 L 4 4 L 0 8 Z" HorizontalAlignment="Right" VerticalAlignment="Center" Height="8" Width="4"/>
                 </Grid>
@@ -28,7 +28,7 @@
 
         <ControlTemplate x:Key="{x:Static local1:CodeGenPortView.StringPortTemplateKey}" TargetType="views:PortView">
             <Viewbox StretchDirection="Both" Stretch="Uniform">
-                <Grid Width="20" Height="20">
+                <Grid Width="20" Height="20" ToolTip="{Binding PortConfig}">
                     <Ellipse Fill="#ba68c8" HorizontalAlignment="Left" VerticalAlignment="Center" Height="15" Width="15"/>
                     <Path Fill="#ba68c8" Data="M 0 0 L 4 4 L 0 8 Z" HorizontalAlignment="Right" VerticalAlignment="Center" Height="8" Width="4"/>
                 </Grid>

@@ -112,7 +112,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     var vm = new CodeGenOutputViewModel<IExpression>(cfg.PortType)
                     {
                         Name = outkv.Key,
-                        Value = Observable.Return(cfg.VarDef.VariableNameExpression)//this.WhenAnyValue(v => cfg.VarDef.VariableNameExpression)
+                        Value = Observable.Return(cfg.VarDef.VariableNameExpression),//this.WhenAnyValue(v => cfg.VarDef.VariableNameExpression)
+                        PortConfig = cfg,
                     };
                     cfg.Port = vm;
                     //cfg.CreateValueEditor(vm);//输出初值编辑生成表达式过程
@@ -126,6 +127,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     var vm = new CodeGenOutputViewModel<IStatement>(cfg.PortType)
                     {
                         Name = outkv.Key,
+                        PortConfig = cfg,
                     };
                     cfg.Port = vm;
                     //cfg.CreateValueEditor(vm);//输出初值编辑生成表达式过程
@@ -168,7 +170,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 {
                     cfg.Port = new CodeGenInputViewModel<IExpression>(cfg.PortType)
                     {
-                        Name = inkv.Key
+                        Name = inkv.Key,
+                        PortConfig = cfg,
                     };
                     this.Inputs.Add(cfg.Port);
                 }
@@ -177,7 +180,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     //连接下一个EFlow
                     cfg.Port = new CodeGenInputViewModel<IStatement>(cfg.PortType)
                     {
-                        Name = inkv.Key
+                        Name = inkv.Key,
+                        PortConfig = cfg,
                     };
                     this.Inputs.Add(cfg.Port);
                 }

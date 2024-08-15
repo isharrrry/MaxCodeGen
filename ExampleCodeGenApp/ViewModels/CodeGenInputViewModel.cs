@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExampleCodeGenApp.ViewModels.Nodes;
 using ExampleCodeGenApp.Views;
 using NodeNetwork.Toolkit.ValueNode;
 using NodeNetwork.ViewModels;
@@ -27,5 +28,7 @@ namespace ExampleCodeGenApp.ViewModels
                 this.PortPosition = PortPosition.Right;
             }
         }
+
+        public NodePortConfig PortConfig { get; set; }
     }
 }

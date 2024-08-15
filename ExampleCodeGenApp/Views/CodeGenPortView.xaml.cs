@@ -62,7 +62,7 @@ namespace ExampleCodeGenApp.Views
                 case PortType.U8:
                 case PortType.I16:
                 case PortType.U16:
-                case PortType.I32:
+                case PortType.Integer:
                 case PortType.U32:
                 case PortType.I64:
                 case PortType.U64:
