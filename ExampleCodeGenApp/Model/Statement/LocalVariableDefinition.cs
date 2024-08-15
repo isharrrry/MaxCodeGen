@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ExampleCodeGenApp.Model.Compiler;
+using ExampleCodeGenApp.ViewModels.Nodes;
 
 namespace ExampleCodeGenApp.Model
 {
@@ -18,6 +19,8 @@ namespace ExampleCodeGenApp.Model
         public string DataType { get; set; } = "";
         public string VariableName { get => VariableNameExpression.Value; set => VariableNameExpression.Value=value; }
         public string Value { get; set; }
+        public NodePortConfig PortConfig { get; set; }
+
         public delegate string CompileHandle(CompilerContext ctx);
         public CompileHandle CompileEvent;
 
@@ -25,12 +28,186 @@ namespace ExampleCodeGenApp.Model
         {
             if(VariableName == null)
                 VariableName = context.FindFreeVariableName();
-            context.AddVariableToCurrentScope(this); 
+            context.AddVariableToCurrentScope(this);
+            var DType = "";
             switch (context.ScriptLanguage)
             {
-                case ScriptLanguage.CSharp:
                 case ScriptLanguage.C:
-                    return $"{DataType} {VariableName} = {Value};\n";
+                    {
+                        if (string.IsNullOrWhiteSpace(DataType) && PortConfig != null)
+                        {
+                            switch (PortConfig.PortType)
+                            {
+                                case ViewModels.PortType.DataType:
+                                    break;
+                                case ViewModels.PortType.Execution:
+                                    break;
+                                case ViewModels.PortType.String:
+                                    DType = "char*";
+                                    break;
+                                case ViewModels.PortType.Double:
+                                    DType = "double";
+                                    break;
+                                case ViewModels.PortType.Float:
+                                    DType = "float";
+                                    break;
+                                case ViewModels.PortType.I8:
+                                    DType = "char";
+                                    break;
+                                case ViewModels.PortType.U8:
+                                    DType = "unsigned char";
+                                    break;
+                                case ViewModels.PortType.I16:
+                                    DType = "short";
+                                    break;
+                                case ViewModels.PortType.U16:
+                                    DType = "unsigned short";
+                                    break;
+                                case ViewModels.PortType.I32:
+                                    DType = "int";
+                                    break;
+                                case ViewModels.PortType.U32:
+                                    DType = "unsigned int";
+                                    break;
+                                case ViewModels.PortType.I64:
+                                    DType = "long long";
+                                    break;
+                                case ViewModels.PortType.U64:
+                                    DType = "unsigned long long";
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        else
+                            DType = DataType;
+                        var res = $"{DType} {VariableName}";
+                        if (string.IsNullOrWhiteSpace(DataType) && PortConfig != null)
+                        {
+                            if (PortConfig.IsArr() && PortConfig.Dim > 0)
+                                DType += $"[{PortConfig.Dim}]";
+                            else if (PortConfig.IsArr())
+                                DType += $"[]";
+                        }
+                        if (string.IsNullOrWhiteSpace(Value))
+                        {
+                            if (PortConfig != null && PortConfig.IsArr())
+                            {
+                                res += " = {}";
+                            }
+                            else
+                            {
+                                //非数组不需要初值
+                            }
+                        }
+                        else
+                        {
+                            if (PortConfig != null && PortConfig.IsArr())
+                            {
+                                res += " = { ";
+                                res += Value;
+                                res += " }";
+                            }
+                            else
+                            {
+                                //非数组
+                                res += " = ";
+                                res += Value;
+                                res += "";
+                            }
+                        }
+                        res += $";\n";
+                        return res;
+                    }
+                case ScriptLanguage.CSharp:
+                    {
+
+                        if (string.IsNullOrWhiteSpace(DataType) && PortConfig != null)
+                        {
+                            switch (PortConfig.PortType)
+                            {
+                                case ViewModels.PortType.DataType:
+                                    break;
+                                case ViewModels.PortType.Execution:
+                                    break;
+                                case ViewModels.PortType.String:
+                                    DType = "string";
+                                    break;
+                                case ViewModels.PortType.Double:
+                                    DType = "double";
+                                    break;
+                                case ViewModels.PortType.Float:
+                                    DType = "float";
+                                    break;
+                                case ViewModels.PortType.I8:
+                                    DType = "char";
+                                    break;
+                                case ViewModels.PortType.U8:
+                                    DType = "byte";
+                                    break;
+                                case ViewModels.PortType.I16:
+                                    DType = "Int16";
+                                    break;
+                                case ViewModels.PortType.U16:
+                                    DType = "UInt16";
+                                    break;
+                                case ViewModels.PortType.I32:
+                                    DType = "Int32";
+                                    break;
+                                case ViewModels.PortType.U32:
+                                    DType = "UInt32";
+                                    break;
+                                case ViewModels.PortType.I64:
+                                    DType = "Int64";
+                                    break;
+                                case ViewModels.PortType.U64:
+                                    DType = "UInt64";
+                                    break;
+                                default:
+                                    break;
+                            }
+                            if (PortConfig.IsArr() && PortConfig.Dim > 0)
+                                DType += $"[{PortConfig.Dim}]";
+                            else if (PortConfig.IsArr())
+                                DType += $"[]";
+                        }
+                        else
+                            DType = DataType;
+                        var res = $"{DType} {VariableName}";
+                        if (string.IsNullOrWhiteSpace(Value))
+                        {
+                            if (PortConfig != null && PortConfig.IsArr())
+                            {
+                                res += " = new ";
+                                res += DType;
+                                res += "{}";
+                            }
+                            else
+                            {
+                                //非数组不需要初值
+                            }
+                        }
+                        else
+                        {
+                            if (PortConfig != null && PortConfig.IsArr())
+                            {
+                                res += " = new ";
+                                res += DType;
+                                res += "{ ";
+                                res += Value;
+                                res += " }";
+                            }
+                            else
+                            {
+                                //非数组
+                                res += " = ";
+                                res += Value;
+                                res += "";
+                            }
+                        }
+                        res += $";\n";
+                        return res;
+                    }
                 case ScriptLanguage.Lua:
                     return $"local {VariableName} = {Value}\n";
                 default:

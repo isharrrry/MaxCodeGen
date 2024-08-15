@@ -35,14 +35,14 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             InConfigDic["In0"] = new NodeInConfig()
             {
                 IsExpression = true,
-                PortType = PortType.DataPack,
+                PortType = PortType.U8,
+                Dim = -1,
                 DataValue = "new byte[]{}",
             };
             OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
-                PortType = PortType.DataPack,
-                DataType = "byte[]",
-                DataValue = "new byte[]{}",
+                PortType = PortType.U8,
+                Dim = -1,
             };
             ParamDic["ElemCount"] = new ParamDefine()
             {
@@ -64,7 +64,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     var cfg = new NodeInConfig()
                     {
                         IsExpression = true,
-                        PortType = PortType.DataPack,
+                        PortType = PortType.U8,
+                        Dim = -1,
                         DataValue = "new byte[]{}",
                     };
                     var inkvKey = $"In{i}";

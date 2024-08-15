@@ -47,7 +47,6 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
                 PortType = PortType.Double,
-                DataType = "double",
                 DataValue = "0",
             };
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新

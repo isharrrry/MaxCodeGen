@@ -40,15 +40,14 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             };
             OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
-                PortType = PortType.DataPack,
-                DataType = "byte[]",
-                DataValue = "new byte[]{}",
+                PortType = PortType.U8,
+                Dim = -1,
             };
             ParamDic["DataType"] = new ParamDefine()
             {
                 PortType = PortType.DataType,
                 Name = "数据类型",
-                DataValue = "double",
+                DataValue = "Double",
                 Description = "数据类型",
             };
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新

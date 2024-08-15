@@ -54,9 +54,21 @@ namespace ExampleCodeGenApp.Views
         {
             switch (type)
             {
-                case PortType.Execution: return (ControlTemplate) Resources[ExecutionPortTemplateKey];
-                case PortType.Integer: return (ControlTemplate) Resources[IntegerPortTemplateKey];
-                case PortType.String: return (ControlTemplate) Resources[StringPortTemplateKey];
+                case PortType.Execution: 
+                    return (ControlTemplate) Resources[ExecutionPortTemplateKey];
+                case PortType.Double:
+                case PortType.Float:
+                case PortType.I8:
+                case PortType.U8:
+                case PortType.I16:
+                case PortType.U16:
+                case PortType.I32:
+                case PortType.U32:
+                case PortType.I64:
+                case PortType.U64:
+                    return (ControlTemplate) Resources[IntegerPortTemplateKey];
+                case PortType.String: 
+                    return (ControlTemplate) Resources[StringPortTemplateKey];
                 default: throw new Exception("Unsupported port type");
             }
         }

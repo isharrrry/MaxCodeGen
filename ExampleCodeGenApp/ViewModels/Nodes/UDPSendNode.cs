@@ -35,7 +35,8 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             InConfigDic["In"] = new NodeInConfig()
             {
                 IsExpression = true,
-                PortType = PortType.DataPack,
+                PortType = PortType.U8,
+                Dim = -1,
                 DataValue = "0",
             };
             ParamDic["IP"] = new ParamDefine()

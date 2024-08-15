@@ -32,7 +32,6 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             {
                 IsExpression = true,
                 PortType = PortType.Double,
-                DataType = "double",
                 DataValue = "0",
             };
             ParamDic["Amp"] = new ParamDefine()

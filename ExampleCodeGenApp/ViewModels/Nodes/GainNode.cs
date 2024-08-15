@@ -41,7 +41,6 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
                 PortType = PortType.Double,
-                DataType = "double",
                 DataValue = "0",
             };
             ParamDic["GainVal"] = new ParamDefine()

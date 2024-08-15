@@ -208,6 +208,26 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
     {
         public bool IsExpression { get; set; }
         public PortType PortType { get; set; } = PortType.Integer;
+        /// <summary>
+        /// 0维度为单维度，-1为多维缺省值
+        /// </summary>
+        public int Dim { get; set; } = 0;
+        public bool IsArr()
+        {
+            return Dim != 0;
+        }
+        public bool IsSingleValue()
+        {
+            return Dim == 0;
+        }
+        public override string ToString()
+        {
+            if (IsArr())
+            {
+                return $"{PortType}[{(Dim == -1 ? "" : Dim)}]";
+            }
+            return $"{PortType}";
+        }
     }
 
     public class NodeInConfig : NodePortConfig
@@ -220,13 +240,22 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
     public class NodeOutConfig : NodePortConfig
     {
         [YamlIgnore]
-        public LocalVariableDefinition VarDef { get; set; } = new LocalVariableDefinition();
+        public LocalVariableDefinition VarDef { get; } = new LocalVariableDefinition();
         [YamlIgnore]
         public NodeOutputViewModel Port { get; set; }
         public string DataType { get => VarDef.DataType; set => VarDef.DataType=value; }
         public string DataValue { get => VarDef.Value; set => VarDef.Value=value; }
         public NodeOutConfig()
         {
+            VarDef.PortConfig = this;
+        }
+        public override string ToString()
+        {
+            if (IsArr())
+            {
+                return $"{PortType}[{(Dim == -1 ? "" : Dim)}] {VarDef.VariableName}";
+            }
+            return $"{PortType} {VarDef.VariableName}";
         }
 #if false //输出初值编辑生成表达式过程
         [YamlIgnore]
