@@ -86,7 +86,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     codeTemp = codeTemp.Replace($"[{var.Key}]", var.Value.VariableName);
                 return VarDefStatement + codeTemp;
             }
-            throw new NotImplementedException();
+            return $"//Node {Name} Not Implemented {ctx.ScriptLanguage} Script Language !";
         }
         public BaseCodeGenNodeViewModel() : this(NodeType.Function)
         {

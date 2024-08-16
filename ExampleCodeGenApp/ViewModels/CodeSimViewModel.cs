@@ -164,8 +164,9 @@ namespace ExampleCodeGenApp.ViewModels
                     //codes += $"Console.WriteLine(SysTimeSec.ToString(\"F2\"));\n";
                     codes += "\nCurrentTick++;\nSysTimeSec += StepSize;\n}\n";
 
+                    var header = GetIncludeCode(ctx);
                     ctx.LeaveScope();
-                    ScriptSource = codes;
+                    ScriptSource = header + codes;
                 }
                 else
                 {
@@ -176,7 +177,7 @@ namespace ExampleCodeGenApp.ViewModels
                     });
                 }
                 CodePreview.PreViewCode = ScriptSource;
-                File.WriteAllText("Script/ScriptSource.yml", ScriptSource);
+                SaveScriptSourceCode?.Invoke(ScriptSource);
                 Log($"生成结束！脚本共{GetLineCount(ScriptSource)}行！");
             }
             catch (Exception ex)
@@ -184,6 +185,8 @@ namespace ExampleCodeGenApp.ViewModels
                 Log(ex);
             }
         }
+
+        public Action<string> SaveScriptSourceCode;
 
         public Dictionary<string, AssemblyConfig> Includes { get; set; } = new Dictionary<string, AssemblyConfig> { };
         private string GetIncludeCode(CompilerContext ctx)
@@ -193,6 +196,8 @@ namespace ExampleCodeGenApp.ViewModels
             {
                 if (ctx.ScriptLanguage == ScriptLanguage.CSharp)
                     code += $"using {include.Key};\n";
+                if (ctx.ScriptLanguage == ScriptLanguage.C)
+                    code += $"#include {include.Key}\n";
             }
             return code;
         }

@@ -74,6 +74,7 @@ namespace ExampleCodeGenApp.ViewModels
         {
             Instance = this;
             CodeSim.CodePreview = CodePreview;
+            CodeSim.SaveScriptSourceCode = SaveScriptSourceCode;
             this.WhenAnyValue(vm => vm.NetworkBreadcrumbBar.ActiveItem).Cast<NetworkBreadcrumb>()
                 .Select(b => b?.Network)
                 .ToProperty(this, vm => vm.Network, out _network);
@@ -136,6 +137,31 @@ namespace ExampleCodeGenApp.ViewModels
             openButton = ReactiveCommand.Create(Open);
             saveButton = ReactiveCommand.Create(Save);
             saveAsButton = ReactiveCommand.Create(SaveAs);
+        }
+
+        private void SaveScriptSourceCode(string ScriptSource)
+        {
+            var type = "txt";
+            switch (CodeSim.ScriptLanguage)
+            {
+                case ScriptLanguage.CSharp:
+                    type = "cs";
+                    break;
+                case ScriptLanguage.C:
+                    type = "c";
+                    break;
+                case ScriptLanguage.Lua:
+                    type = "lua";
+                    break;
+                default:
+                    break;
+            }
+            if (!string.IsNullOrWhiteSpace(CGFilePath))
+            {
+                var codePath = Path.Combine(Path.GetDirectoryName(CGFilePath), $"{Path.GetFileNameWithoutExtension(CGFilePath)}.{type}");
+                File.WriteAllText(codePath, ScriptSource);
+                Log($"已保存代码 {codePath}");
+            }
         }
 
         private void LoadProgramNode()
@@ -285,6 +311,9 @@ namespace ExampleCodeGenApp.ViewModels
                     CGFilePath = "";
                     CodeSim.Network = Network;
                     Network.Nodes.Clear();
+                    ButtonEventNode eventNode = new ButtonEventNode { CanBeRemovedByUser = false };
+                    Network.Nodes.Add(eventNode);
+                    ButtonEventNodeInit(eventNode);
                 }
             }
             catch (Exception ex)
@@ -296,10 +325,10 @@ namespace ExampleCodeGenApp.ViewModels
         {
             try
             {
-                if (MessageBox.Show("是否丢弃并打开新文件？", "提示", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
-                {
-                    return;
-                }
+                //if (MessageBox.Show("是否丢弃并打开新文件？", "提示", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                //{
+                //    return;
+                //}
                 if (DataFileHelper.OpenFile(CGFileFilter) is string path)
                 {
                     CGFilePath = path;
