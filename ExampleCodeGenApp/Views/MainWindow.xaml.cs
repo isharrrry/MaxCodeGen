@@ -36,6 +36,8 @@ namespace ExampleCodeGenApp.Views
         public MainWindow()
         {
             InitializeComponent();
+            //Config.ConfigWindow.Config(new ViewModels.Nodes.GainNode(), true, false);
+            //CodeGenNodeView.PropertyGridShow(new ViewModels.Nodes.GainNode(), "");
 
             var nodeMenu = ((ContextMenu)Resources["nodeMenu"]).Items.OfType<MenuItem>();
             groupNodesButton = nodeMenu.First(c => c.Name == nameof(groupNodesButton));

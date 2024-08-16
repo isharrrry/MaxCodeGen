@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -145,8 +146,62 @@ namespace ExampleCodeGenApp.ViewModels
             NodeList.AddNodeType(() => new BytePackNode());
             NodeList.AddNodeType(() => new MuxNode());
             NodeList.AddNodeType(() => new UDPSendNode());
+            LoadFunctionNode();
 
 
+        }
+
+        string LibraryPath = "lib";
+
+        private void LoadFunctionNode()
+        {
+            if (!Directory.Exists(LibraryPath))
+            {
+                Directory.CreateDirectory(LibraryPath);
+            }
+            var files = Directory.GetFiles(LibraryPath);
+            if(files.Count() == 0)
+            {
+                InitFunctionLib();
+                files = Directory.GetFiles(LibraryPath);
+            }
+            foreach (var file in files)
+            {
+                var ext = Path.GetExtension(file);
+                if (ext == ".func")
+                {
+                    //load
+                    if (TryLoadLibFunction(file) is GenFuncNode node)
+                    {
+                        NodeList.AddNodeType(() => TryLoadLibFunction(file, true));
+                        MainViewModel.Log($"Load func node {file} ok.");
+                    }
+                    else
+                        MainViewModel.Log($"Load func node {file} faild!");
+                }
+            }
+        }
+
+        private GenFuncNode TryLoadLibFunction(string file, bool LoadPorts = false)
+        {
+            var data = File.ReadAllText(file);
+            var res = YmlConfigHelper.ConfigDeserializeWithTypeMappingSet<GenFuncNode>(data, WithTypeMappingSet);
+            if (LoadPorts)
+                res.LoadPorts();
+            return res;
+        }
+
+        private void InitFunctionLib()
+        {
+            var temp = new GenFuncNode();
+            temp.LoadPorts();
+            var yaml = YmlConfigHelper.ConfigSerializeWithTypeMappingSet(temp, WithTypeMappingSet, SerializerBuilderWith);
+            File.WriteAllText(Path.Combine(LibraryPath, "demo.func"), yaml);
+        }
+
+        public static void Log(object msg)
+        {
+            Debug.WriteLine(msg.ToString());
         }
 
         private void ButtonEventNodeInit(ButtonEventNode eventNode)

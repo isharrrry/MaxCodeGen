@@ -66,9 +66,14 @@ namespace ExampleCodeGenApp.Views
 
         private void Label_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            PropertyGridShow((DataContext as BaseCodeGenNodeViewModel)?.ParamPropertyList, DataContext.GetType().Name.ToString());
+        }
+
+        public static void PropertyGridShow(object SelectedObject, string title)
+        {
             PropertyGrid PG = new PropertyGrid();
-            PG.SelectedObject = (DataContext as BaseCodeGenNodeViewModel)?.ParamPropertyList;
-            PG.SelectedObjectTypeName = DataContext.GetType().Name.ToString();
+            PG.SelectedObject = SelectedObject;
+            PG.SelectedObjectTypeName = title;
             var win = new Window()
             {
                 Title = "设置模块属性",

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reactive.Linq;
 using Common;
 using DynamicData;
@@ -19,11 +20,17 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
     /// </summary>
     public class BaseCodeGenNodeViewModel : CodeGenNodeViewModel
     {
-        public Dictionary<string, NodeInConfig> InConfigDic = new Dictionary<string, NodeInConfig> { };
-        public Dictionary<string, NodeOutConfig> OutConfigDic = new Dictionary<string, NodeOutConfig> { };
-        public Dictionary<string, ParamDefine> ParamDic = new Dictionary<string, ParamDefine> { };
-        public Dictionary<string, List<AssemblyConfig>> ScriptAssemblyDic = new Dictionary<string, List<AssemblyConfig>> { };
-        public Dictionary<string, string> ScriptTempDic = new Dictionary<string, string> { };
+        [DisplayName("输入端口配置")]
+        public Dictionary<string, NodeInConfig> InConfigDic { get; set; } = new Dictionary<string, NodeInConfig> { };
+        [DisplayName("输出端口配置")]
+        public Dictionary<string, NodeOutConfig> OutConfigDic { get; set; } = new Dictionary<string, NodeOutConfig> { };
+        [DisplayName("参数配置")]
+        public Dictionary<string, ParamDefine> ParamDic { get; set; } = new Dictionary<string, ParamDefine> { };
+        [DisplayName("代码配置")]
+        public Dictionary<string, string> ScriptTempDic { get; set; } = new Dictionary<string, string> { };
+        [DisplayName("代码ScriptAssembly配置")]
+        public Dictionary<string, List<AssemblyConfig>> ScriptAssemblyDic { get; set; } = new Dictionary<string, List<AssemblyConfig>> { };
+        [YamlIgnore]
         public PropertyList ParamPropertyList = new PropertyList();
         public string CompileEvent(CompilerContext ctx)
         {

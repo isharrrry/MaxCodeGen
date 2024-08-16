@@ -37,7 +37,6 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 IsExpression = true,
                 PortType = PortType.U8,
                 Dim = -1,
-                DataValue = "new byte[]{}",
             };
             OutConfigDic["Out"] = new NodeOutConfig() {
                 IsExpression = true,
@@ -66,7 +65,6 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                         IsExpression = true,
                         PortType = PortType.U8,
                         Dim = -1,
-                        DataValue = "new byte[]{}",
                     };
                     var inkvKey = $"In{i}";
                     InConfigDic[inkvKey] = cfg;

@@ -14,7 +14,8 @@
     <Resource Include="Resources\grid.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\RTSimPlatform\Links-Common-Library\Common\CommonExt.csproj" />
+    <ProjectReference Include="..\..\..\..\Synple\ComUnity\ComUnity.csproj" />
+    <ProjectReference Include="..\..\..\..\Synple\ComView\ComView.csproj" />
     <ProjectReference Include="..\NodeNetworkToolkit\NodeNetworkToolkit.csproj" />
     <ProjectReference Include="..\NodeNetwork\NodeNetwork.csproj" />
   </ItemGroup>
