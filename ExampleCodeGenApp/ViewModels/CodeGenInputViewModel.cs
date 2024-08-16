@@ -40,7 +40,7 @@ namespace ExampleCodeGenApp.ViewModels
             var isValid = t1 == t2 || t1 >= PortType.Double && t2 >= PortType.Double;
             if (!isValid)
             {
-                Debug.WriteLine($"类型 {t1} 与 {t2} 不匹配!");
+                MainViewModel.Log($"类型 {t1} 与 {t2} 不匹配!");
             }
             return new ConnectionValidationResult(isValid, null);
         }
