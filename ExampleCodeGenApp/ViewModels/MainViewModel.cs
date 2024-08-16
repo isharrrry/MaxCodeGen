@@ -15,6 +15,7 @@ using Common;
 using DynamicData;
 using ExampleCodeGenApp.Model;
 using ExampleCodeGenApp.Model.Compiler;
+using ExampleCodeGenApp.Unity;
 using ExampleCodeGenApp.ViewModels.Nodes;
 using NodeNetwork.Toolkit.BreadcrumbBar;
 using NodeNetwork.Toolkit.Group;
@@ -53,6 +54,7 @@ namespace ExampleCodeGenApp.ViewModels
         public BreadcrumbBarViewModel NetworkBreadcrumbBar { get; } = new BreadcrumbBarViewModel();
         public NodeListViewModel NodeList { get; } = new NodeListViewModel();
         public CodePreviewViewModel CodePreview { get; } = new CodePreviewViewModel();
+        public static MainViewModel Instance;
         public CodeSimViewModel CodeSim { get; } = new CodeSimViewModel();
 
         public ReactiveCommand<Unit, Unit> AutoLayout { get; }
@@ -63,8 +65,14 @@ namespace ExampleCodeGenApp.ViewModels
         public ReactiveCommand<Unit, Unit> UngroupNodes { get; }
         public ReactiveCommand<Unit, Unit> OpenGroup { get; }
 
+        public ReactiveCommand<Unit, Unit> newButton { get; }
+        public ReactiveCommand<Unit, Unit> openButton { get; }
+        public ReactiveCommand<Unit, Unit> saveButton { get; }
+        public ReactiveCommand<Unit, Unit> saveAsButton { get; }
+
         public MainViewModel()
         {
+            Instance = this;
             CodeSim.CodePreview = CodePreview;
             this.WhenAnyValue(vm => vm.NetworkBreadcrumbBar.ActiveItem).Cast<NetworkBreadcrumb>()
                 .Select(b => b?.Network)
@@ -123,6 +131,11 @@ namespace ExampleCodeGenApp.ViewModels
                     Name = selectedGroupNode.Name
                 });
             }, isGroupNodeSelected);
+
+            newButton = ReactiveCommand.Create(() => New());
+            openButton = ReactiveCommand.Create(Open);
+            saveButton = ReactiveCommand.Create(Save);
+            saveAsButton = ReactiveCommand.Create(SaveAs);
         }
 
         private void LoadProgramNode()
@@ -201,7 +214,7 @@ namespace ExampleCodeGenApp.ViewModels
 
         public static void Log(object msg)
         {
-            Debug.WriteLine(msg.ToString());
+            Instance.CodeSim.Log(msg);
         }
 
         private void ButtonEventNodeInit(ButtonEventNode eventNode)
@@ -263,24 +276,49 @@ namespace ExampleCodeGenApp.ViewModels
             return YmlConfigHelper.ConfigDeserializeWithTypeMappingSet<T>(SerializeText, WithTypeMappingSet);
         }
 
-        internal void Load()
+        public void New(bool force = false)
         {
             try
             {
-                CodeSim.Network = Network;
-
-                var obj = Deserialize<NetworkConfig>(File.ReadAllText("All.yml"));
-                Network.Nodes.Clear();
-                foreach (var item in obj.Nodes)
+                if (force || MessageBox.Show("是否创建新文件？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    if (item is ButtonEventNode bt)
-                    {
-                        bt.CanBeRemovedByUser = false;
-                        ButtonEventNodeInit(bt);
-                    }
-                    Network.Nodes.Add(item);
+                    CGFilePath = "";
+                    CodeSim.Network = Network;
+                    Network.Nodes.Clear();
                 }
-                obj.GetConnectionConfigs(Network);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+        public void Open()
+        {
+            try
+            {
+                if (MessageBox.Show("是否丢弃并打开新文件？", "提示", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+                if (DataFileHelper.OpenFile(CGFileFilter) is string path)
+                {
+                    CGFilePath = path;
+                    CodeSim.Network = Network;
+
+                    var obj = Deserialize<NetworkConfig>(File.ReadAllText(path));
+                    Network.Nodes.Clear();
+                    foreach (var item in obj.Nodes)
+                    {
+                        if (item is ButtonEventNode bt)
+                        {
+                            bt.CanBeRemovedByUser = false;
+                            ButtonEventNodeInit(bt);
+                        }
+                        Network.Nodes.Add(item);
+                    }
+                    obj.GetConnectionConfigs(Network);
+                    Log($"已打开 {CGFilePath}");
+                }
             }
             catch (Exception ex)
             {
@@ -295,8 +333,17 @@ namespace ExampleCodeGenApp.ViewModels
             return YmlConfigHelper.ConfigSerializeWithTypeMappingSet(cfg, WithTypeMappingSet, SerializerBuilderWith);
         }
 
-        internal void Save()
+        public string CGExt = ".cg";
+        public string CGFilePath = "";
+        string CGFileFilter = "(*.cg)|*.cg";
+
+        public void Save()
         {
+            if (string.IsNullOrWhiteSpace(CGFilePath))
+            {
+                SaveAs();
+                return;
+            }
             // 创建一个Serializer实例
             //var serializer = new SerializerBuilder()
             //    //.WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -311,7 +358,19 @@ namespace ExampleCodeGenApp.ViewModels
             if(MessageBox.Show("是否保存？", "提示", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 var yaml = Serialize();
-                File.WriteAllText("All.yml", yaml);
+                File.WriteAllText(CGFilePath, yaml);
+                Log($"已保存 {CGFilePath}");
+            }
+        }
+
+        private void SaveAs()
+        {
+            if (DataFileHelper.SaveFile(CGFileFilter) is string path)
+            {
+                var yaml = Serialize();
+                File.WriteAllText(path, yaml);
+                CGFilePath = path;
+                Log($"已保存 {path}");
             }
         }
 

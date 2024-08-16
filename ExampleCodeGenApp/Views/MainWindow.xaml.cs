@@ -67,7 +67,21 @@ namespace ExampleCodeGenApp.Views
 				this.WhenAnyObservable(v => v.ViewModel.StartAutoLayoutLive.IsExecuting)
 					.Select((isRunning) => isRunning ? Visibility.Visible : Visibility.Collapsed)
 					.BindTo(this, v => v.stopAutoLayoutLiveButton.Visibility);
-			});
+
+                //code
+                this.OneWayBind(ViewModel, vm => vm.CodeSim.GenerateScript, v => v.genButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.CodeSim.BuildScript, v => v.buildButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.CodeSim.RunScript, v => v.runButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.CodeSim.StopScript, v => v.stopButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.CodeSim.ClearOutput, v => v.clearButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.CodeSim.Output, v => v.codeSimView.outputTextBlock.Text).DisposeWith(d);
+
+                //file
+                this.OneWayBind(ViewModel, vm => vm.newButton, v => v.newButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.openButton, v => v.openButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.saveButton, v => v.saveButton.Command).DisposeWith(d);
+                this.OneWayBind(ViewModel, vm => vm.saveAsButton, v => v.saveAsButton.Command).DisposeWith(d);
+            });
 
             this.ViewModel = new MainViewModel();
             Loaded +=MainWindow_Loaded;
@@ -76,12 +90,12 @@ namespace ExampleCodeGenApp.Views
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            ViewModel.Load();
+            ViewModel.New(true);
         }
 
         private void MainWindow_Closed(object sender, System.EventArgs e)
         {
-            ViewModel.Save();
+            //ViewModel.Save();
         }
     }
 }

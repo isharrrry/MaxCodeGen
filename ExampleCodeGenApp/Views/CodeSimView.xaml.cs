@@ -45,11 +45,11 @@ namespace ExampleCodeGenApp.Views
 
             this.WhenActivated(d =>
             {
-                this.OneWayBind(ViewModel, vm => vm.GenerateScript, v => v.genButton.Command).DisposeWith(d);
-                this.OneWayBind(ViewModel, vm => vm.BuildScript, v => v.buildButton.Command).DisposeWith(d);
-                this.OneWayBind(ViewModel, vm => vm.RunScript, v => v.runButton.Command).DisposeWith(d);
-                this.OneWayBind(ViewModel, vm => vm.StopScript, v => v.stopButton.Command).DisposeWith(d);
-                this.OneWayBind(ViewModel, vm => vm.ClearOutput, v => v.clearButton.Command).DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.GenerateScript, v => v.genButton.Command).DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.BuildScript, v => v.buildButton.Command).DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.RunScript, v => v.runButton.Command).DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.StopScript, v => v.stopButton.Command).DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.ClearOutput, v => v.clearButton.Command).DisposeWith(d);
                 this.OneWayBind(ViewModel, vm => vm.Output, v => v.outputTextBlock.Text).DisposeWith(d);
             });
         }

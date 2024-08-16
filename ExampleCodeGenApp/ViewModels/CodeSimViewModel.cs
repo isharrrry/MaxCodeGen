@@ -77,7 +77,7 @@ namespace ExampleCodeGenApp.ViewModels
             try
             {
                 Builded = false;
-                Output = $"生成开始...";
+                Log($"生成开始...");
                 //Script script = new Script();
                 //script.Globals["print"] = (Action<string>)Print;
                 if(ScriptMode == ScriptMode.数据流)
@@ -177,11 +177,11 @@ namespace ExampleCodeGenApp.ViewModels
                 }
                 CodePreview.PreViewCode = ScriptSource;
                 File.WriteAllText("Script/ScriptSource.yml", ScriptSource);
-                Output = $"生成结束！脚本共{GetLineCount(ScriptSource)}行！";
+                Log($"生成结束！脚本共{GetLineCount(ScriptSource)}行！");
             }
             catch (Exception ex)
             {
-                Output = ex.ToString();
+                Log(ex);
             }
         }
 
@@ -341,7 +341,7 @@ namespace ExampleCodeGenApp.ViewModels
         {
             try
             {
-                Output = $"编译开始...";
+                Log($"编译开始...");
                 //匹配不上名字
                 //var CompileLibraries = DependencyContext.Default.CompileLibraries
                 //      .Where(cl =>
@@ -405,18 +405,18 @@ namespace Test{
 
                 dll = "test.dll";
                 var eResult = compilation.Emit(dll);
-                Output = $"编译结束！{(eResult.Success ? "成功" : "失败")}！\n";
+                Log($"编译结束！{(eResult.Success ? "成功" : "失败")}！");
                 // 输出编译失败的原因
                 foreach (var diagnostic in eResult.Diagnostics)
                 {
-                    Output += (diagnostic.ToString()) + "\n";
+                    Log(diagnostic);
                 }
                 Builded = eResult.Success;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
-                Output = ex.ToString();
+                Log(ex);
             }
         }
 
@@ -425,7 +425,7 @@ namespace Test{
             try
             {
                 CodeSimView.Handle.Invoke(() => {
-                    Output = $"运行开始...\n";
+                    Log($"运行开始...");
                 });
                 //include加入代码
                 var scriptOptions = ScriptOptions.Default.WithImports("System");
@@ -453,21 +453,21 @@ namespace Test{
                 {
                     Debug.WriteLine(scriptState.Exception);
                     CodeSimView.Handle.Invoke(() => {
-                        Output += $"Script execution failed: {scriptState.Exception}";
+                        Log($"Script execution failed: {scriptState.Exception}");
                     });
                 }
                 else
                 {
                 }
                 CodeSimView.Handle.Invoke(() => {
-                    Output += $"运行结束！";
+                    Log($"运行结束！");
                 });
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
                 CodeSimView.Handle.Invoke(() => {
-                    Output = ex.ToString();
+                    Log(ex);
                 });
             }
         }
@@ -475,6 +475,12 @@ namespace Test{
         public void Print(string msg)
         {
             Output += msg;
+        }
+
+        public void Log(object msg)
+        {
+            Print($"{DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.fff")}: {msg.ToString()}\n");
+            //Debug.WriteLine(msg.ToString());
         }
     }
 
