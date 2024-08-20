@@ -44,7 +44,7 @@
             <Button x:Name="genButton" HorizontalAlignment="Left" Content="编码" />
             <Button x:Name="buildButton" HorizontalAlignment="Left" Content="编译" />
             <Button x:Name="runButton" HorizontalAlignment="Left" Content="运行" />
-            <Button x:Name="stopButton" HorizontalAlignment="Left" Content="停止" />
+            <Button x:Name="stopButton" HorizontalAlignment="Left" Content="停止" Visibility="Collapsed"/>
             <Separator />
             <Button x:Name="clearButton" HorizontalAlignment="Left" Content="清空Log" />
             

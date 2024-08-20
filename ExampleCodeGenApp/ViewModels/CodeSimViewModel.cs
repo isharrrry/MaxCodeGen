@@ -69,8 +69,7 @@ namespace ExampleCodeGenApp.ViewModels
             GenerateScript = ReactiveCommand.Create(GenerateScriptExec);
             BuildScript = ReactiveCommand.Create(BuildScriptExec);
             StopScript = ReactiveCommand.Create(StopScriptExec);
-            RunScript = ReactiveCommand.Create(RunScriptExec,
-                this.WhenAnyValue(vm => vm.Code).Select(code => code != null));
+            RunScript = ReactiveCommand.Create(RunScriptExec);//, this.WhenAnyValue(vm => vm.Code).Select(code => code != null)
 
             ClearOutput = ReactiveCommand.Create(() => { Output = ""; });
         }
@@ -317,20 +316,24 @@ namespace ExampleCodeGenApp.ViewModels
                         Are5Codes += (ctx.GlobalVariables["RunningTime"].Compile(ctx) + "");
                     }
                     Are5Codes += "setup();\n";
-                    Are5Codes += "while (gv.RunningTime <= 0 || " + "gv.SysTimeSec" + " < gv.RunningTime) {\n";
+                    var RunningTimeVarName = (ctx.UseGlobalVar ? "gv." : "") + "RunningTime";
+                    var SysTimeSecVarName = (ctx.UseGlobalVar ? "gv." : "") + "SysTimeSec";
+                    var CurrentTickVarName = (ctx.UseGlobalVar ? "gv." : "") + "CurrentTick";
+                    var StepSizeVarName = (ctx.UseGlobalVar ? "gv." : "") + "StepSize";
+                    Are5Codes += $"while ({RunningTimeVarName} <= 0 || " + SysTimeSecVarName + " < " + RunningTimeVarName + ") {\n";
                     Are5Codes += "step();\n";
                     Are5Codes += "\n";
                     //Are5Codes += $"Console.WriteLine(SysTimeSec.ToString(\"F2\"));\n";
                     Are5Codes += "\n";
-                    Are5Codes += $"{"gv.CurrentTick"}++;\n";
+                    Are5Codes += $"{CurrentTickVarName}++;\n";
                     //获取时间
                     switch (ctx.ScriptLanguage)
                     {
                         case ScriptLanguage.CSharp:
-                            Are5Codes += $"{"gv.SysTimeSec"} = StartSysClockValue.Elapsed.TotalSeconds;\n";
+                            Are5Codes += $"{SysTimeSecVarName} = StartSysClockValue.Elapsed.TotalSeconds;\n";
                             break;
                         case ScriptLanguage.C:
-                            Are5Codes += $"{"gv.SysTimeSec"} = ((double)(clock() - StartSysClockValue)) / CLOCKS_PER_SEC;\n";
+                            Are5Codes += $"{SysTimeSecVarName} = ((double)(clock() - StartSysClockValue)) / CLOCKS_PER_SEC;\n";
                             break;
                         case ScriptLanguage.Lua:
                             break;
@@ -340,25 +343,25 @@ namespace ExampleCodeGenApp.ViewModels
                     switch (ctx.ScriptLanguage)
                     {
                         case ScriptLanguage.CSharp:
-                            Are5Codes += $"Console.WriteLine(\"SysTimeSec = \" + gv.SysTimeSec.ToString(\"F6\"));\n";
+                            Are5Codes += $"Console.WriteLine(\"SysTimeSec = \" + " + SysTimeSecVarName + ".ToString(\"F6\"));\n";
                             break;
                         case ScriptLanguage.C:
-                            Are5Codes += $"printf(\"SysTimeSec = %lf\\n\", gv.SysTimeSec);\n";
+                            Are5Codes += $"printf(\"SysTimeSec = %lf\\n\", " + SysTimeSecVarName +");\n";
                             break;
                         case ScriptLanguage.Lua:
                             break;
                         default:
                             break;
                     }
-                    Are5Codes += $"while(gv.StepSize > 0 && gv.CurrentTick * gv.StepSize > gv.SysTimeSec)\n";//等待到下一帧时间
+                    Are5Codes += $"while({StepSizeVarName} > 0 && {CurrentTickVarName} * {StepSizeVarName} > {SysTimeSecVarName})\n";//等待到下一帧时间
                     //获取时间
                     switch (ctx.ScriptLanguage)
                     {
                         case ScriptLanguage.CSharp:
-                            Are5Codes += $"{"gv.SysTimeSec"} = StartSysClockValue.Elapsed.TotalSeconds;\n";
+                            Are5Codes += $"{SysTimeSecVarName} = StartSysClockValue.Elapsed.TotalSeconds;\n";
                             break;
                         case ScriptLanguage.C:
-                            Are5Codes += $"{"gv.SysTimeSec"} = ((double)(clock() - StartSysClockValue)) / CLOCKS_PER_SEC;\n";
+                            Are5Codes += $"{SysTimeSecVarName} = ((double)(clock() - StartSysClockValue)) / CLOCKS_PER_SEC;\n";
                             break;
                         case ScriptLanguage.Lua:
                             break;
@@ -468,7 +471,7 @@ namespace ExampleCodeGenApp.ViewModels
                     });
                 }
                 CodePreview.PreViewCode = ScriptSource;
-                SaveScriptSourceCode?.Invoke(ScriptSource);
+                SaveScriptSourceCode(ScriptSource);
                 Log($"生成结束！脚本共{GetLineCount(ScriptSource)}行！");
             }
             catch (Exception ex)
@@ -477,9 +480,65 @@ namespace ExampleCodeGenApp.ViewModels
             }
         }
 
-        public Action<string> SaveScriptSourceCode;
+
+        private string SaveScriptBinFile(MemoryStream ms)
+        {
+            var type = "bin";
+            switch (ScriptLanguage)
+            {
+                case ScriptLanguage.CSharp:
+                    type = "dll";
+                    break;
+                case ScriptLanguage.C:
+                    type = "exe";
+                    break;
+                case ScriptLanguage.Lua:
+                    break;
+                default:
+                    break;
+            }
+            if (!string.IsNullOrWhiteSpace(CGFilePath))
+            {
+                var codePath = Path.Combine(Path.GetDirectoryName(CGFilePath), $"{Path.GetFileNameWithoutExtension(CGFilePath)}.{type}");
+                ms.Seek(0, SeekOrigin.Begin);
+                File.WriteAllBytes(codePath, ms.ToArray());
+                Log($"已保存可执行文件 {codePath}");
+                return codePath;
+            }
+            return null;
+        }
+
+        private string SaveScriptSourceCode(string ScriptSource)
+        {
+            var type = "txt";
+            switch (ScriptLanguage)
+            {
+                case ScriptLanguage.CSharp:
+                    type = "cs";
+                    break;
+                case ScriptLanguage.C:
+                    type = "c";
+                    break;
+                case ScriptLanguage.Lua:
+                    type = "lua";
+                    break;
+                default:
+                    break;
+            }
+            if (!string.IsNullOrWhiteSpace(CGFilePath))
+            {
+                var codePath = Path.Combine(Path.GetDirectoryName(CGFilePath), $"{Path.GetFileNameWithoutExtension(CGFilePath)}.{type}");
+                File.WriteAllText(codePath, ScriptSource);
+                Log($"已保存代码 {codePath}");
+                return codePath;
+            }
+            return null;
+        }
 
         public Dictionary<string, AssemblyConfig> Includes { get; set; } = new Dictionary<string, AssemblyConfig> { };
+        public string CGFilePath { get; set; }
+        public string ScriptBinFilePath { get; set; }
+
         private string GetIncludeCode(CompilerContext ctx)
         {
             var code = "";
@@ -612,41 +671,17 @@ namespace ExampleCodeGenApp.ViewModels
         {
             CTS?.Cancel();
         }
-
+        Task RunScriptTask;
         private void RunScriptExec()
         {
             //script.DoString(source);
-
             // 创建一个 CancellationTokenSource 对象
             CTS = new CancellationTokenSource();
             // 创建一个 CancellationToken 对象，用于传递给 CSharpScript.RunAsync 方法
             CancellationToken token = CTS.Token;
-            Task.Run(() => { RunCsharp(ScriptSource, token); });
-            
+            RunScriptTask = Task.Run(() => { RunCsharp(ScriptSource, token); });
 
-            //if (Builded)
-            //{
-            //    //ProcessHelper.Start("dotnet", "Script/test.dll", ProcessWindowStyle.Normal, "./");
-            //    //?dotnet Script/test.dll
-            //    //                A fatal error was encountered.The library 'hostpolicy.dll' required to execute the application was not found in 'F:\hhl\IOMAP2023\NodeNetwork\ExampleCodeGenApp\bin\Debug\net6.0-windows\Script\'.
-            //    //Failed to run as a self-contained app.
-            //    //  - The application was run as a self-contained app because 'F:\hhl\IOMAP2023\NodeNetwork\ExampleCodeGenApp\bin\Debug\net6.0-windows\Script\test.runtimeconfig.json' was not found.
-            //    //  - If this should be a framework-dependent app, add the 'F:\hhl\IOMAP2023\NodeNetwork\ExampleCodeGenApp\bin\Debug\net6.0-windows\Script\test.runtimeconfig.json' file and specify the appropriate framework.
-            //    Console.SetOut(new ConsoleWriter(Print));
-            //    try
-            //    {
-            //        Output = $"运行开始...";
-            //        Assembly assembly = Assembly.Load("./test.dll");//加载不了
-            //        var obj = assembly.CreateInstance("Test.Program");
-            //        var method = obj.GetType().GetMethod("Main", BindingFlags.Public | BindingFlags.Static);
-            //        var added = method.Invoke(obj, new object[] { });
-            //        Output = $"运行结束！";
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Output = ex.ToString();
-            //    }
-            //}
+            //RunCsharp(ScriptSource);
         }
 
         private object GetLineCount(string scriptSource)
@@ -656,11 +691,12 @@ namespace ExampleCodeGenApp.ViewModels
         Boolean Builded = false;
         private double stepSize = 0.1;
 
+        Assembly assembly; 
         private void BuildCsharp(string source)
         {
             try
             {
-                Log($"编译开始...");
+                Log($"以CSharp编译开始...");
                 //匹配不上名字
                 //var CompileLibraries = DependencyContext.Default.CompileLibraries
                 //      .Where(cl =>
@@ -699,15 +735,11 @@ namespace Test{
         } 
     }
 }";
-                source = testClass.Replace("@@@", source);
+                //source = testClass.Replace("@@@", source);
                 var syntaxTree = CSharpSyntaxTree.ParseText(source);
 
-                var dll = Guid.NewGuid().ToString();
-                if (File.Exists(dll))
-                {
-                    File.Delete(dll);
-                }
-                var compilation = CSharpCompilation.Create("Test")
+                //var dll = Guid.NewGuid().ToString();
+                var compilation = CSharpCompilation.Create("CodeGen")
                     .AddReferences(_ref)
                     .AddSyntaxTrees(syntaxTree)
                     .WithOptions(new CSharpCompilationOptions(
@@ -722,15 +754,35 @@ namespace Test{
                 //        warningLevel: 4,
                 //        xmlReferenceResolver: null // don't support XML file references in interactive (permissions & doc comment includes)
 
-                dll = "test.dll";
-                var eResult = compilation.Emit(dll);
-                Log($"编译结束！{(eResult.Success ? "成功" : "失败")}！");
-                // 输出编译失败的原因
-                foreach (var diagnostic in eResult.Diagnostics)
+                //dll = "Test.dll";
+                ScriptBinFilePath = null;
+                // 编译并输出到内存流  
+                using (var ms = new System.IO.MemoryStream())
                 {
-                    Log(diagnostic);
+                    var eResult = compilation.Emit(ms);
+                    if (eResult.Success)
+                    {
+                        ScriptBinFilePath = SaveScriptBinFile(ms);//save
+                        ms.Seek(0, SeekOrigin.Begin);
+                        // 加载编译后的程序集  
+                        assembly = null;
+                        try
+                        {
+                            assembly = Assembly.Load(ms.ToArray());
+                        }
+                        catch (Exception ex)
+                        {
+                            Log(ex);
+                        }
+                    }
+                    Log($"编译结束！{(eResult.Success ? "成功" : "失败")}！");
+                    // 输出编译失败的原因
+                    foreach (var diagnostic in eResult.Diagnostics)
+                    {
+                        Log(diagnostic);
+                    }
+                    Builded = eResult.Success;
                 }
-                Builded = eResult.Success;
             }
             catch (Exception ex)
             {
@@ -738,46 +790,81 @@ namespace Test{
                 Log(ex);
             }
         }
+        //异常
+        private async void RunCsharp(string source)
+        {
+            //控制台打开
+            if(ScriptBinFilePath == null || !File.Exists(ScriptBinFilePath))
+            {
+                Log($"请先编译！");
+                return;
+            }
+            Process.Start("cmd.exe", $"/c dotnet {ScriptBinFilePath} & pause");
 
+            //if (Builded)
+            //{
+            //    //ProcessHelper.Start("dotnet", "Script/test.dll", ProcessWindowStyle.Normal, "./");
+            //    //?dotnet Script/test.dll
+            //    //                A fatal error was encountered.The library 'hostpolicy.dll' required to execute the application was not found in 'ExampleCodeGenApp\bin\Debug\net6.0-windows\Script\'.
+            //    //Failed to run as a self-contained app.
+            //    //  - The application was run as a self-contained app because 'ExampleCodeGenApp\bin\Debug\net6.0-windows\Script\test.runtimeconfig.json' was not found.
+            //    //  - If this should be a framework-dependent app, add the 'ExampleCodeGenApp\bin\Debug\net6.0-windows\Script\test.runtimeconfig.json' file and specify the appropriate framework.
+            //    Console.SetOut(new ConsoleWriter(Print));
+            //    try
+            //    {
+            //        Output = $"运行开始...";
+            //        Assembly assembly = Assembly.Load("./test.dll");//加载不了
+            //        var obj = assembly.CreateInstance("Test.Program");
+            //        var method = obj.GetType().GetMethod("Main", BindingFlags.Public | BindingFlags.Static);
+            //        var added = method.Invoke(obj, new object[] { });
+            //        Output = $"运行结束！";
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Output = ex.ToString();
+            //    }
+            //}
+        }
+
+        TextWriter originalConsoleOut = Console.Out;
+        /// <summary>
+        /// 主要问题：roslyn api无法运行带命名空间的代码、MethodInfo Invoke无法中途取消
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="token"></param>
         private async void RunCsharp(string source, CancellationToken token)
         {
             try
             {
-                CodeSimView.Handle.Invoke(() => {
-                    Log($"运行开始...");
-                });
-                //include加入代码
-                var scriptOptions = ScriptOptions.Default.WithImports("System");
-                if (Includes.Count > 0)
+                if (assembly == null)
                 {
-                    var gusing = new List<string> { "System", "System.Linq" };
-                    gusing.AddRange(Includes.Keys);
-                    scriptOptions = ScriptOptions.Default.WithImports(gusing)
-                        .AddReferences("System.Linq")
-                        .AddReferences("System.Net.Sockets");
-                }
-                var scriptState = await CSharpScript.RunAsync(
-                    "Console.SetOut(ConsoleWriter);\n\n" + source
-                    , scriptOptions
-                    , new ConsoleClass() { 
-                        ConsoleWriter = new ConsoleWriter(s => {
-                            CodeSimView.Handle.Invoke(() => {
-                                Print(s);
-                            });
-                        })
-                    } 
-                    ,cancellationToken: token);
-                // 检查执行结果
-                if (scriptState.Exception != null)
-                {
-                    Debug.WriteLine(scriptState.Exception);
                     CodeSimView.Handle.Invoke(() => {
-                        Log($"Script execution failed: {scriptState.Exception}");
+                        Log($"请先编译!");
                     });
+                    return;
                 }
-                else
+                CodeSimView.Handle.Invoke(() => {
+                    Log($"以CSharp运行开始...");
+                });
+                var ConsoleWriter = new ConsoleWriter(s =>
                 {
+                    CodeSimView.Handle.Invoke(() =>
+                    {
+                        Print(s);
+                    });
+                });
+                Console.SetOut(ConsoleWriter);
+                // 获取 Main 方法并执行  
+                Type programType = assembly.GetType("CodeGen.Program");
+                MethodInfo mainMethod = programType?.GetMethod("Main", BindingFlags.Public | BindingFlags.Static);
+                if (mainMethod != null)
+                {
+                    // 准备方法参数  
+                    object[] parameters = new object[] { new string[] { /* 参数 */ } }; // 如需传递参数，可以在这里填充  
+                    // 调用静态 Main 方法  
+                    mainMethod.Invoke(null, parameters);
                 }
+
                 CodeSimView.Handle.Invoke(() => {
                     Log($"运行结束！");
                 });
@@ -788,6 +875,11 @@ namespace Test{
                 CodeSimView.Handle.Invoke(() => {
                     Log(ex);
                 });
+            }
+            finally
+            {
+                // 恢复到原始的标准输出  
+                Console.SetOut(originalConsoleOut);
             }
         }
 
