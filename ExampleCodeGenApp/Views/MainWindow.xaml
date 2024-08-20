@@ -34,6 +34,11 @@
             <Button x:Name="saveButton">保存</Button>
             <Button x:Name="saveAsButton">另存为</Button>
             <Separator />
+            <Label>运行步长</Label>
+            <TextBox Text="{Binding ViewModel.StepSize,ElementName=codeSimView}"></TextBox>
+            <Label>运行时长</Label>
+            <TextBox Text="{Binding ViewModel.RunningTime,ElementName=codeSimView}"></TextBox>
+            <Separator />
             <ComboBox ItemsSource="{Binding ViewModel.ScriptModes,ElementName=codeSimView}" SelectedItem="{Binding ViewModel.ScriptMode,ElementName=codeSimView}"  Margin="2"></ComboBox>
             <ComboBox ItemsSource="{Binding ViewModel.ScriptLanguages,ElementName=codeSimView}" SelectedItem="{Binding ViewModel.ScriptLanguage,ElementName=codeSimView}"  Margin="2"></ComboBox>
             <Button x:Name="genButton" HorizontalAlignment="Left" Content="编码" />

@@ -57,6 +57,8 @@ namespace ExampleCodeGenApp.ViewModels
         public ScriptLanguage ScriptLanguage { get; set; } = ScriptLanguage.CSharp;
         public static List<ScriptMode> ScriptModes { get; set; } = Enum.GetValues(typeof(ScriptMode)).Cast<ScriptMode>().ToList();
         public ScriptMode ScriptMode { get; set; } = ScriptMode.数据流;
+        public double StepSize { get => stepSize; set { if(value >= 0) stepSize=value; } }
+        public double RunningTime { get; set; } = 0;
         public CodePreviewViewModel CodePreview { get; internal set; }
         public NetworkViewModel Network { get; internal set; }
 
@@ -173,6 +175,7 @@ namespace ExampleCodeGenApp.ViewModels
                         Are4Codes += (ctx.GlobalVariables["SysTimeSec"].Compile(ctx) + "");
                         Are4Codes += (ctx.GlobalVariables["CurrentTick"].Compile(ctx) + "");
                         Are4Codes += (ctx.GlobalVariables["StepSize"].Compile(ctx) + "");
+                        Are4Codes += (ctx.GlobalVariables["RunningTime"].Compile(ctx) + "");
                     }
                     switch (ctx.ScriptLanguage)
                     {
@@ -293,9 +296,11 @@ namespace ExampleCodeGenApp.ViewModels
                     {
                         case ScriptLanguage.CSharp:
                             Are5Codes += "public static void Main(string[] args) {\n";
+                            Are5Codes += $"Stopwatch StartSysClockValue = new Stopwatch();\nStartSysClockValue.Start();\n";
                             break;
                         case ScriptLanguage.C:
                             Are5Codes += "void main() {\n";
+                            Are5Codes += $"clock_t StartSysClockValue = clock();\n";
                             break;
                         case ScriptLanguage.Lua:
                             Are5Codes += "function main()\n";
@@ -309,15 +314,57 @@ namespace ExampleCodeGenApp.ViewModels
                         Are5Codes += (ctx.GlobalVariables["SysTimeSec"].Compile(ctx) + "");
                         Are5Codes += (ctx.GlobalVariables["CurrentTick"].Compile(ctx) + "");
                         Are5Codes += (ctx.GlobalVariables["StepSize"].Compile(ctx) + "");
+                        Are5Codes += (ctx.GlobalVariables["RunningTime"].Compile(ctx) + "");
                     }
                     Are5Codes += "setup();\n";
-                    Are5Codes += "while (" + "gv.SysTimeSec" + " < (4)) {\n";
+                    Are5Codes += "while (gv.RunningTime <= 0 || " + "gv.SysTimeSec" + " < gv.RunningTime) {\n";
                     Are5Codes += "step();\n";
                     Are5Codes += "\n";
                     //Are5Codes += $"Console.WriteLine(SysTimeSec.ToString(\"F2\"));\n";
                     Are5Codes += "\n";
                     Are5Codes += $"{"gv.CurrentTick"}++;\n";
-                    Are5Codes += $"{"gv.SysTimeSec"} += {"gv.StepSize"};\n";
+                    //获取时间
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are5Codes += $"{"gv.SysTimeSec"} = StartSysClockValue.Elapsed.TotalSeconds;\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are5Codes += $"{"gv.SysTimeSec"} = ((double)(clock() - StartSysClockValue)) / CLOCKS_PER_SEC;\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are5Codes += $"Console.WriteLine(\"SysTimeSec = \" + gv.SysTimeSec.ToString(\"F6\"));\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are5Codes += $"printf(\"SysTimeSec = %lf\\n\", gv.SysTimeSec);\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+                    Are5Codes += $"while(gv.StepSize > 0 && gv.CurrentTick * gv.StepSize > gv.SysTimeSec)\n";//等待到下一帧时间
+                    //获取时间
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are5Codes += $"{"gv.SysTimeSec"} = StartSysClockValue.Elapsed.TotalSeconds;\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are5Codes += $"{"gv.SysTimeSec"} = ((double)(clock() - StartSysClockValue)) / CLOCKS_PER_SEC;\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
                     Are5Codes += "}\n";
                     ctx.LeaveScope();//Main
                     switch (ctx.ScriptLanguage)
@@ -366,7 +413,18 @@ namespace ExampleCodeGenApp.ViewModels
                     ctx.EnterNewScope("GlobalVar");
                     foreach (var item in ctx.GlobalVar)
                     {
-                        Are2Codes += item;
+                        switch (ctx.ScriptLanguage)
+                        {
+                            case ScriptLanguage.CSharp:
+                                Are2Codes += "public " + item;
+                                break;
+                            case ScriptLanguage.C:
+                            case ScriptLanguage.Lua:
+                                Are2Codes += item;
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     ctx.LeaveScope();//GlobalVar
                     switch (ctx.ScriptLanguage)
@@ -427,8 +485,12 @@ namespace ExampleCodeGenApp.ViewModels
             var code = "";
             if (ctx.ScriptLanguage == ScriptLanguage.C && !Includes.ContainsKey("<stdio.h>"))
                 code += $"#include <stdio.h>\n";
+            if (ctx.ScriptLanguage == ScriptLanguage.C && !Includes.ContainsKey("<time.h>"))
+                code += $"#include <time.h>\n";
             if (ctx.ScriptLanguage == ScriptLanguage.CSharp && !Includes.ContainsKey("System"))
                 code += $"using System;\n";
+            if (ctx.ScriptLanguage == ScriptLanguage.CSharp && !Includes.ContainsKey("System.Diagnostics"))
+                code += $"using System.Diagnostics;\n";
             foreach (var include in Includes)
             {
                 if (ctx.ScriptLanguage == ScriptLanguage.CSharp)
@@ -453,15 +515,22 @@ namespace ExampleCodeGenApp.ViewModels
             if (ctx.UseGlobalVar)
                 CurrentTick.VariableNameExpression.Value = "gv." + CurrentTick.VariableName;
             CurrentTick.PortConfig = new NodePortConfig() { PortType = PortType.U64 };
-            CurrentTick.Value = "10";
+            CurrentTick.Value = "0";
             ctx.GlobalVariables["CurrentTick"] = CurrentTick;
             var StepSize = new LocalVariableDefinition();
             StepSize.VariableName = "StepSize";
             if (ctx.UseGlobalVar)
                 StepSize.VariableNameExpression.Value = "gv." + StepSize.VariableName;
             StepSize.PortConfig = new NodePortConfig() { PortType = PortType.Double };
-            StepSize.Value = "0.1";
+            StepSize.Value = this.StepSize > 0 ? this.StepSize.ToString() : "0.1";
             ctx.GlobalVariables["StepSize"] = StepSize;
+            var RunningTime = new LocalVariableDefinition();
+            RunningTime.VariableName = "RunningTime";
+            if (ctx.UseGlobalVar)
+                RunningTime.VariableNameExpression.Value = "gv." + RunningTime.VariableName;
+            RunningTime.PortConfig = new NodePortConfig() { PortType = PortType.Double };
+            RunningTime.Value = this.RunningTime.ToString();
+            ctx.GlobalVariables["RunningTime"] = RunningTime;
         }
         private List<NodeViewModel> GetOrderEflowNodes(List<NodeViewModel> eflowNodes)
         {
@@ -585,6 +654,8 @@ namespace ExampleCodeGenApp.ViewModels
             return scriptSource.Split('\n').Count();
         }
         Boolean Builded = false;
+        private double stepSize = 0.1;
+
         private void BuildCsharp(string source)
         {
             try
