@@ -15,9 +15,17 @@ namespace ExampleCodeGenApp.Model
     /// <typeparam name="T"></typeparam>
     public class LocalVariableDefinition: IVariableDefinition//<T> : ITypedVariableDefinition<T>
     {
+        //用于外部调用
         public BaseExpressionLiteral VariableNameExpression { get; set; } = new BaseExpressionLiteral();
         public string DataType { get; set; } = "";
-        public string VariableName { get => VariableNameExpression.Value; set => VariableNameExpression.Value=value; }
+        public string _VariableName { get; set; } = null;
+        public string VariableName { 
+            get => _VariableName;
+            set {
+                _VariableName = value;
+                VariableNameExpression.Value=value;
+            }
+        }
         public string Value { get; set; }
         public NodePortConfig PortConfig { get; set; }
 
@@ -27,8 +35,12 @@ namespace ExampleCodeGenApp.Model
         public string Compile(CompilerContext context)
         {
             if(VariableName == null)
+            {
                 VariableName = context.FindFreeVariableName();
-            context.AddVariableToCurrentScope(this);
+                context.AddVariableToCurrentScope(this);
+                if (context.UseGlobalVar)
+                    VariableNameExpression.Value = "gv." + VariableName;
+            }
             var DType = "";
             switch (context.ScriptLanguage)
             {
@@ -89,6 +101,12 @@ namespace ExampleCodeGenApp.Model
                             else if (PortConfig.IsArr())
                                 DType += $"[]";
                         }
+                        if (context.UseGlobalVar)
+                        {
+                            res += $";\n";
+                            context.GlobalVar.Add(res);
+                            res = "gv." + VariableName;
+                        }
                         if (string.IsNullOrWhiteSpace(Value))
                         {
                             if (PortConfig != null && PortConfig.IsArr())
@@ -117,6 +135,11 @@ namespace ExampleCodeGenApp.Model
                             }
                         }
                         res += $";\n";
+                        if (context.UseGlobalVar)
+                        {
+                            context.GlobalVarValue.Add(res);
+                            res = "";
+                        }
                         return res;
                     }
                 case ScriptLanguage.CSharp:
@@ -174,6 +197,12 @@ namespace ExampleCodeGenApp.Model
                         else
                             DType = DataType;
                         var res = $"{DType} {VariableName}";
+                        if (context.UseGlobalVar)
+                        {
+                            res += $";\n";
+                            context.GlobalVar.Add(res);
+                            res = "gv." + VariableName;
+                        }
                         if (string.IsNullOrWhiteSpace(Value))
                         {
                             if (PortConfig != null && PortConfig.IsArr())
@@ -206,6 +235,11 @@ namespace ExampleCodeGenApp.Model
                             }
                         }
                         res += $";\n";
+                        if (context.UseGlobalVar)
+                        {
+                            context.GlobalVarValue.Add(res);
+                            res = "";
+                        }
                         return res;
                     }
                 case ScriptLanguage.Lua:

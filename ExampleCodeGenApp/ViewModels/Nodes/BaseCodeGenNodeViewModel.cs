@@ -58,7 +58,10 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     if(inport.Value.Port is CodeGenInputViewModel<IExpression> cgep)
                     {
                         if(cgep.Value == null)
-                            codeTemp = codeTemp.Replace($"[{inport.Key}]", inport.Value.DataValue);
+                        {
+                            var DataValue = inport.Value.DataValue;
+                            codeTemp = codeTemp.Replace($"[{inport.Key}]", DataValue);
+                        }
                         else
                         {
                             //输入的表达式
@@ -77,16 +80,26 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                     //if(vardef.VariableName == null)
                     {
                         vardef.VariableName = outport.Key + "_" + ctx.FindFreeVariableName();
+                        ctx.AddVariableToCurrentScope(vardef);
+                        if (ctx.UseGlobalVar)
+                            vardef.VariableNameExpression.Value = "gv." + vardef.VariableName;
                         VarDefStatement += vardef.Compile(ctx);
                     }
                     var ep = vardef.VariableName;
+                    if (ctx.UseGlobalVar)
+                        ep = "gv." + ep;
                     codeTemp = codeTemp.Replace($"[{outport.Key}]", ep);
                 }
                 foreach (var var in ctx.GlobalVariables)
-                    codeTemp = codeTemp.Replace($"[{var.Key}]", var.Value.VariableName);
+                {
+                    var varName = var.Value.VariableName;
+                    if (ctx.UseGlobalVar)
+                        varName = "gv." + varName;
+                    codeTemp = codeTemp.Replace($"[{var.Key}]", varName);
+                }
                 return VarDefStatement + codeTemp;
             }
-            return $"//Node {Name} Not Implemented {ctx.ScriptLanguage} Script Language !";
+            return $"//Node {Name} Not Implemented {ctx.ScriptLanguage} Language !";
         }
         public BaseCodeGenNodeViewModel() : this(NodeType.Function)
         {

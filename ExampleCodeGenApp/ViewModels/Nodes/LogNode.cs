@@ -55,6 +55,7 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
             };
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新
             ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"Console.WriteLine([Head] + [In].ToString([Format]));";
+            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"printf([Head]);\nprintf([Format], [In]);";
             LoadPorts();
         }
     }

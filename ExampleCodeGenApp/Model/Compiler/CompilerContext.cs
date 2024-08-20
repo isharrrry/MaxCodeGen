@@ -23,6 +23,10 @@ namespace ExampleCodeGenApp.Model.Compiler
     public class CompilerContext
     {
         public ScriptLanguage ScriptLanguage { get; set; }
+        public bool UseGlobalVar { get; set; } = true;
+        public List<string> GlobalVar = new List<string>();
+        public List<string> GlobalVarValue = new List<string>();
+        public ScopeDefinition GlobalScopeDefinition { get; set; } = new ScopeDefinition("Root");
 
         public Stack<ScopeDefinition> VariablesScopesStack { get; } = new Stack<ScopeDefinition>();
         public ScriptMode ScriptMode { get; set; } = ScriptMode.数据流;
@@ -36,12 +40,17 @@ namespace ExampleCodeGenApp.Model.Compiler
         /// <returns></returns>
         public string FindFreeVariableName()
         {
+            if (UseGlobalVar)
+                return "v" + GlobalScopeDefinition.Variables.Count();
             return "v" + VariablesScopesStack.SelectMany(s => s.Variables).Count();
         }
 
         public void AddVariableToCurrentScope(IVariableDefinition variable)
         {
-            VariablesScopesStack.Peek().Variables.Add(variable);
+            if (UseGlobalVar)
+                GlobalScopeDefinition.Variables.Add(variable);
+            else
+                VariablesScopesStack.Peek().Variables.Add(variable);
         }
 
         public void EnterNewScope(string scopeIdentifier)
@@ -60,8 +69,10 @@ namespace ExampleCodeGenApp.Model.Compiler
             {
                 return false;
             }
-
-            return VariablesScopesStack.Any(s => s.Variables.Contains(variable));
+            if (UseGlobalVar)
+                return GlobalScopeDefinition.Variables.Contains(variable);
+            else
+                return VariablesScopesStack.Any(s => s.Variables.Contains(variable));
         }
     }
 }

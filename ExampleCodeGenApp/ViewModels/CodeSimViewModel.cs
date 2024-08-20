@@ -124,18 +124,71 @@ namespace ExampleCodeGenApp.ViewModels
                         ScriptLanguage = this.ScriptLanguage,
                         ScriptMode = this.ScriptMode
                     };
-                    var codes = "";
+                    var DeptCodes = "";
                     if (eflowNodes.Count != 0)
                     {
-                        codes += $"//{eflowNodes.Count}个节点没有被排序到代码生成\n";
+                        DeptCodes += $"//{eflowNodes.Count}个节点没有被排序到代码生成\n";
+                        foreach (var node in eflowNodes)
+                        {
+                            DeptCodes += $"//节点 {node.GetType().Name} {node.Name}\n";
+                        }
                     }
-                    Includes?.Clear();
-                    ctx.EnterNewScope("Main");
+                    this.Includes?.Clear();
+
+                    //代码Are开始
+                    //namespace
+                    var NamespaceCodes = "";
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            NamespaceCodes += "namespace CodeGen {\n";
+                            break;
+                        case ScriptLanguage.C:
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.EnterNewScope("Namespace");
+                    var MainClassCodes = "";
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            MainClassCodes += "public class Program {\npublic static GlobalVar gv = new GlobalVar();\n";
+                            break;
+                        case ScriptLanguage.C:
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.EnterNewScope("MainClass");
+                    //Are4步函数 Step
                     InitFlowGlobal(ctx);
-                    codes += (ctx.GlobalVariables["SysTimeSec"].Compile(ctx) + "");
-                    codes += (ctx.GlobalVariables["CurrentTick"].Compile(ctx) + "");
-                    codes += (ctx.GlobalVariables["StepSize"].Compile(ctx) + "");
-                    codes += "while (SysTimeSec < (4)) {\n\n";
+                    var Are4Codes = "";
+                    if (ctx.UseGlobalVar)
+                    {
+                        Are4Codes += (ctx.GlobalVariables["SysTimeSec"].Compile(ctx) + "");
+                        Are4Codes += (ctx.GlobalVariables["CurrentTick"].Compile(ctx) + "");
+                        Are4Codes += (ctx.GlobalVariables["StepSize"].Compile(ctx) + "");
+                    }
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are4Codes += "public static void step() {\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are4Codes += "void step() {\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            Are4Codes += "function step()\n";
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.EnterNewScope("Step");
                     foreach (var node in codeEflowNodes)
                     {
                         if (node is BaseCodeGenNodeViewModel bNode)
@@ -145,28 +198,208 @@ namespace ExampleCodeGenApp.ViewModels
                             {
                                 foreach (var cfg in bNode.ScriptAssemblyDic[ctx.ScriptLanguage.ToString()])
                                 {
-                                    Includes[cfg.Include] = (cfg);
+                                    this.Includes[cfg.Include] = (cfg);
                                 }
                             }
-                            codes += (bNode.CompileEvent(ctx) + "\n");
+                            Are4Codes += (bNode.CompileEvent(ctx) + "\n");
                             if (codeEflowNodes.Last() == node && bNode.OutConfigDic.Count > 0)
-                                codes += $"Console.WriteLine({bNode.OutConfigDic.Last().Value.VarDef.VariableName}.ToString(\"F2\"));\n";
+                            {
+                                var vn = bNode.OutConfigDic.Last().Value.VarDef.VariableName;
+                                if (ctx.UseGlobalVar && !string.IsNullOrWhiteSpace(vn))
+                                    vn = "gv." + vn;
+                                else if (string.IsNullOrWhiteSpace(vn))
+                                    vn = bNode.OutConfigDic.Last().Value.VarDef.Value;
+                                switch (ctx.ScriptLanguage)
+                                {
+                                    case ScriptLanguage.CSharp:
+                                        Are4Codes += $"Console.WriteLine({vn}.ToString(\"F2\"));\n";
+                                        break;
+                                    case ScriptLanguage.C:
+                                        Are4Codes += $"printf(\"%lf\\n\", (double){vn});\n";
+                                        break;
+                                    case ScriptLanguage.Lua:
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
                         }
                         //foreach (var output in node.Outputs.Items)
                         //{
                         //    if (output is ValueNodeOutputViewModel<IExpression> epVm)
                         //    {
                         //        epVm.Value.ForEach(x =>
-                        //            codes += (x.Compile(ctx) + "\n"));
+                        //            Are4Codes += (x.Compile(ctx) + "\n"));
                         //    }
                         //}
                     }
-                    //codes += $"Console.WriteLine(SysTimeSec.ToString(\"F2\"));\n";
-                    codes += "\nCurrentTick++;\nSysTimeSec += StepSize;\n}\n";
+                    ctx.LeaveScope();//Step
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                        case ScriptLanguage.C:
+                            Are4Codes += "}//Step\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            Are4Codes += "end\n";
+                            break;
+                        default:
+                            break;
+                    }
+                    //Are1头文件
+                    var Are1Codes = GetIncludeCode(ctx);
+                    //Are3初始化函数 Setup
+                    var Are3Codes = "";
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are3Codes += "public static void setup() {\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are3Codes += "#ifndef M_PI\n";
+                            Are3Codes += "#define M_PI 3.14159265358979323846\n";
+                            Are3Codes += "#endif\n";
+                            Are3Codes += "void setup() {\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            Are3Codes += "function setup()\n";
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.EnterNewScope("Setup");
+                    foreach (var item in ctx.GlobalVarValue)
+                    {
+                        Are3Codes += item;
+                    }
+                    ctx.LeaveScope();//Setup
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                        case ScriptLanguage.C:
+                            Are3Codes += "}//Setup\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            Are3Codes += "end\n";
+                            break;
+                        default:
+                            break;
+                    }
+                    MainClassCodes += Are3Codes;
+                    MainClassCodes += Are4Codes;
+                    //Are5入口函数 Main
+                    var Are5Codes = "";
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are5Codes += "public static void Main(string[] args) {\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are5Codes += "void main() {\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            Are5Codes += "function main()\n";
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.EnterNewScope("Main");
+                    if (!ctx.UseGlobalVar)
+                    {
+                        Are5Codes += (ctx.GlobalVariables["SysTimeSec"].Compile(ctx) + "");
+                        Are5Codes += (ctx.GlobalVariables["CurrentTick"].Compile(ctx) + "");
+                        Are5Codes += (ctx.GlobalVariables["StepSize"].Compile(ctx) + "");
+                    }
+                    Are5Codes += "setup();\n";
+                    Are5Codes += "while (" + "gv.SysTimeSec" + " < (4)) {\n";
+                    Are5Codes += "step();\n";
+                    Are5Codes += "\n";
+                    //Are5Codes += $"Console.WriteLine(SysTimeSec.ToString(\"F2\"));\n";
+                    Are5Codes += "\n";
+                    Are5Codes += $"{"gv.CurrentTick"}++;\n";
+                    Are5Codes += $"{"gv.SysTimeSec"} += {"gv.StepSize"};\n";
+                    Are5Codes += "}\n";
+                    ctx.LeaveScope();//Main
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                        case ScriptLanguage.C:
+                            Are5Codes += "}//Main\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            Are5Codes += "end\n";
+                            break;
+                        default:
+                            break;
+                    }
 
-                    var header = GetIncludeCode(ctx);
-                    ctx.LeaveScope();
-                    ScriptSource = header + codes;
+                    MainClassCodes += Are5Codes;
+                    ctx.LeaveScope();//MainClass
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            MainClassCodes += "}//MainClass\n";
+                            break;
+                        case ScriptLanguage.C:
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+
+                    //Are2变量结构体类
+                    var Are2Codes = "";
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are2Codes += "public class GlobalVar() {\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are2Codes += "struct GlobalVar {\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+                    ctx.EnterNewScope("GlobalVar");
+                    foreach (var item in ctx.GlobalVar)
+                    {
+                        Are2Codes += item;
+                    }
+                    ctx.LeaveScope();//GlobalVar
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            Are2Codes += "}//GlobalVar\n";
+                            break;
+                        case ScriptLanguage.C:
+                            Are2Codes += "};//GlobalVar\nstruct GlobalVar gv;\n";
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+
+                    //LeaveScope Namespace
+                    ctx.LeaveScope();//Namespace
+                    NamespaceCodes += Are2Codes;
+                    NamespaceCodes += MainClassCodes;
+                    switch (ctx.ScriptLanguage)
+                    {
+                        case ScriptLanguage.CSharp:
+                            NamespaceCodes += "}//Namespace\n";
+                            break;
+                        case ScriptLanguage.C:
+                            break;
+                        case ScriptLanguage.Lua:
+                            break;
+                        default:
+                            break;
+                    }
+                    ScriptSource = DeptCodes + Are1Codes + NamespaceCodes;
                 }
                 else
                 {
@@ -192,6 +425,10 @@ namespace ExampleCodeGenApp.ViewModels
         private string GetIncludeCode(CompilerContext ctx)
         {
             var code = "";
+            if (ctx.ScriptLanguage == ScriptLanguage.C && !Includes.ContainsKey("<stdio.h>"))
+                code += $"#include <stdio.h>\n";
+            if (ctx.ScriptLanguage == ScriptLanguage.CSharp && !Includes.ContainsKey("System"))
+                code += $"using System;\n";
             foreach (var include in Includes)
             {
                 if (ctx.ScriptLanguage == ScriptLanguage.CSharp)
@@ -206,17 +443,23 @@ namespace ExampleCodeGenApp.ViewModels
         {
             var SysTimeSec = new LocalVariableDefinition();
             SysTimeSec.VariableName = "SysTimeSec";
-            SysTimeSec.DataType = "double";
+            if (ctx.UseGlobalVar)
+                SysTimeSec.VariableNameExpression.Value = "gv." + SysTimeSec.VariableName;
+            SysTimeSec.PortConfig = new NodePortConfig() { PortType = PortType.Double };
             SysTimeSec.Value = "0";
             ctx.GlobalVariables["SysTimeSec"] = SysTimeSec;
             var CurrentTick = new LocalVariableDefinition();
             CurrentTick.VariableName = "CurrentTick";
-            CurrentTick.DataType = "int";
+            if (ctx.UseGlobalVar)
+                CurrentTick.VariableNameExpression.Value = "gv." + CurrentTick.VariableName;
+            CurrentTick.PortConfig = new NodePortConfig() { PortType = PortType.U64 };
             CurrentTick.Value = "10";
             ctx.GlobalVariables["CurrentTick"] = CurrentTick;
             var StepSize = new LocalVariableDefinition();
             StepSize.VariableName = "StepSize";
-            StepSize.DataType = "double";
+            if (ctx.UseGlobalVar)
+                StepSize.VariableNameExpression.Value = "gv." + StepSize.VariableName;
+            StepSize.PortConfig = new NodePortConfig() { PortType = PortType.Double };
             StepSize.Value = "0.1";
             ctx.GlobalVariables["StepSize"] = StepSize;
         }
