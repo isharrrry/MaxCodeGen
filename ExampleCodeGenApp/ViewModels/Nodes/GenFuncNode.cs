@@ -35,11 +35,6 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
 
         public GenFuncNode() : base()
         {
-        }
-
-        public override void LoadPorts()
-        {
-            this.Name = FuncName;
             InConfigDic["In"] = new NodeInConfig()
             {
                 IsExpression = true,
@@ -60,8 +55,21 @@ namespace ExampleCodeGenApp.ViewModels.Nodes
                 Description = "放大倍数",
             };
             //应该拿到GainVal的配置值替代上，然后绑定输入连接时也更新
-            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"[Out] = ([In] * [GainVal]);";
+            ScriptTempDic[ScriptLanguage.CSharp.ToString()] = $"[Out] = ([In] * [GainVal]);\n";
+
             ScriptTempDic[ScriptLanguage.C.ToString()] = $"[Out] = ([In] * [GainVal]);";
+            ScriptAssemblyDic[ScriptLanguage.C.ToString()] = new List<AssemblyConfig>
+            {
+                new AssemblyConfig()
+                {
+                    Include = "<math.h>"
+                }
+            };
+        }
+
+        public override void LoadPorts()
+        {
+            this.Name = FuncName;
             base.LoadPorts();
         }
     }

@@ -152,13 +152,13 @@ namespace ExampleCodeGenApp.ViewModels
             NodeList.AddNodeType(() => new RealtimeNode());
             NodeList.AddNodeType(() => new ForLoopNode());
             NodeList.AddNodeType(() => new PrintNode());
-            NodeList.AddNodeType(() => new SineWaveNode());
-            NodeList.AddNodeType(() => new GainNode());
-            NodeList.AddNodeType(() => new PlusNode());
-            NodeList.AddNodeType(() => new LogNode());
-            NodeList.AddNodeType(() => new BytePackNode());
+            //NodeList.AddNodeType(() => new SineWaveNode());
+            //NodeList.AddNodeType(() => new GainNode());
+            //NodeList.AddNodeType(() => new PlusNode());
+            //NodeList.AddNodeType(() => new LogNode());
+            //NodeList.AddNodeType(() => new BytePackNode());
             NodeList.AddNodeType(() => new MuxNode());
-            NodeList.AddNodeType(() => new UDPSendNode());
+            //NodeList.AddNodeType(() => new UDPSendNode());
             LoadFunctionNode();
 
 

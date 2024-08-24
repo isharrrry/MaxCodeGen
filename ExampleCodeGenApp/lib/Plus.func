@@ -1,0 +1,25 @@
+!ExampleCodeGenApp.ViewModels.Nodes.GenFuncNode
+FuncName: Plus
+InConfigDic:
+  In1:
+    DataValue: 0
+    IsExpression: true
+    PortType: Double
+    Dim: 0
+  In2:
+    DataValue: 0
+    IsExpression: true
+    PortType: Double
+    Dim: 0
+OutConfigDic:
+  Out:
+    DataType: ''
+    DataValue: 0
+    IsExpression: true
+    PortType: Double
+    Dim: 0
+ParamDic: {}
+ScriptTempDic:
+  CSharp: '[Out] = [In1] + [In2];'
+  C: '[Out] = [In1] + [In2];'
+ScriptAssemblyDic: {}

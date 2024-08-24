@@ -1,0 +1,24 @@
+!ExampleCodeGenApp.ViewModels.Nodes.GenFuncNode
+FuncName: BytePack
+InConfigDic:
+  In:
+    DataValue: 0
+    IsExpression: true
+    PortType: Double
+    Dim: 0
+OutConfigDic:
+  Out:
+    DataType: ''
+    DataValue: ''
+    IsExpression: true
+    PortType: U8
+    Dim: -1
+ParamDic:
+  DataType:
+    PortType: DataType
+    DataValue: 'Double'
+    Name: 数据类型
+ScriptTempDic:
+  CSharp: '[Out] = BitConverter.GetBytes(([DataType])[In]);'
+  C: '[Out] = (unsigned char *)&[In];'
+ScriptAssemblyDic: {}

@@ -1,0 +1,37 @@
+!ExampleCodeGenApp.ViewModels.Nodes.GenFuncNode
+FuncName: UDPSend
+InConfigDic:
+  In:
+    DataValue: 0
+    IsExpression: true
+    PortType: U8
+    Dim: -1
+OutConfigDic: {}
+ParamDic:
+  IP:
+    PortType: String
+    DataValue: '127.0.0.1'
+    Name: IP
+    Description: 目标IP地址
+  Port:
+    PortType: I32
+    DataValue: '5555'
+    Name: 端口
+    Description: 目标端口
+ScriptTempDic:
+  CSharp: >-
+    using (UdpClient udpClient = new UdpClient()){
+        IPAddress ipAddress = IPAddress.Parse([IP]);
+        byte[] data = [In];
+        udpClient.Send(data, data.Length, new IPEndPoint(ipAddress, [Port]));
+    }
+ScriptAssemblyDic:
+  CSharp:
+  - Include: 'System.Net'
+    IncludePath: 
+    Lib: 
+    LibPath: 
+  - Include: 'System.Net.Sockets'
+    IncludePath: 
+    Lib: 
+    LibPath: 

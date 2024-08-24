@@ -464,7 +464,7 @@ namespace ExampleCodeGenApp.ViewModels
                 }
                 else
                 {
-                    ScriptSource = Code.Compile(new CompilerContext()
+                    ScriptSource = Code?.Compile(new CompilerContext()
                     {
                         ScriptLanguage = this.ScriptLanguage,
                         ScriptMode = this.ScriptMode
@@ -688,7 +688,7 @@ namespace ExampleCodeGenApp.ViewModels
 
         private object GetLineCount(string scriptSource)
         {
-            return scriptSource.Split('\n').Count();
+            return scriptSource?.Split('\n')?.Count();
         }
         Boolean Builded = false;
         private double stepSize = 0.1;

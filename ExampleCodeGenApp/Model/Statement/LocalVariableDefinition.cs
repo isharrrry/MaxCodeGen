@@ -93,19 +93,21 @@ namespace ExampleCodeGenApp.Model
                         }
                         else
                             DType = DataType;
-                        var res = $"{DType} {VariableName}";
                         if (string.IsNullOrWhiteSpace(DataType) && PortConfig != null)
                         {
                             if (PortConfig.IsArr() && PortConfig.Dim > 0)
                                 DType += $"[{PortConfig.Dim}]";
                             else if (PortConfig.IsArr())
-                                DType += $"[]";
+                                DType += $"*";
                         }
+                        var res = $"{DType} {VariableName}";
                         if (context.UseGlobalVar)
                         {
                             res += $";\n";
                             context.GlobalVar.Add(res);
                             res = "gv." + VariableName;
+                            if (PortConfig.Dim < 0)
+                                res = "";
                         }
                         if (string.IsNullOrWhiteSpace(Value))
                         {
@@ -135,6 +137,8 @@ namespace ExampleCodeGenApp.Model
                             }
                         }
                         res += $";\n";
+                        if (PortConfig.Dim < 0)
+                            res = "";
                         if (context.UseGlobalVar)
                         {
                             context.GlobalVarValue.Add(res);

@@ -1,0 +1,49 @@
+!ExampleCodeGenApp.ViewModels.Nodes.GenFuncNode
+IValue: 0
+FuncName: SineWave
+InConfigDic: {}
+OutConfigDic:
+  Out:
+    DataType: ''
+    DataValue: 0
+    IsExpression: true
+    PortType: Double
+    Dim: 0
+ParamDic:
+  Amp:
+    PortType: Double
+    DataValue: 1
+    Name: 幅值
+    Category: 
+    EnPortsUpdate: false
+    IgnoreWhenEmpty: false
+  Bias:
+    PortType: Double
+    DataValue: 0
+    Name: 偏移
+    Category: 
+    EnPortsUpdate: false
+    IgnoreWhenEmpty: false
+  Frequency:
+    PortType: Double
+    DataValue: 1
+    Name: 频率
+    Category: 
+    EnPortsUpdate: false
+    IgnoreWhenEmpty: false
+  Phase:
+    PortType: Double
+    DataValue: 0
+    Name: 相位
+    Category: 
+    EnPortsUpdate: false
+    IgnoreWhenEmpty: false
+ScriptTempDic:
+  CSharp: '[Out] = [Amp] * Math.Sin(Math.PI * 2 * [Frequency] * ([SysTimeSec] + [Phase])) + [Bias];'
+  C: '[Out] = [Amp] * sin(M_PI * 2 * [Frequency] * ([SysTimeSec] + [Phase])) + [Bias];'
+ScriptAssemblyDic:
+  C:
+  - Include: <math.h>
+    IncludePath: 
+    Lib: 
+    LibPath: 

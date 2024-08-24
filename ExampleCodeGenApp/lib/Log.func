@@ -1,0 +1,27 @@
+!ExampleCodeGenApp.ViewModels.Nodes.GenFuncNode
+FuncName: Log
+InConfigDic:
+  In:
+    DataValue: 0
+    IsExpression: true
+    PortType: String
+    Dim: 0
+OutConfigDic: {}
+ParamDic:
+  Format:
+    PortType: String
+    DataValue: ''
+    Name: 格式
+    Description: 打印日志输出格式
+    IgnoreWhenEmpty: true
+  Head:
+    PortType: String
+    DataValue: ''
+    Name: 描述头部
+    Description: 描述头部文本
+ScriptTempDic:
+  CSharp: 'Console.WriteLine([Head] + [In].ToString([Format]));'
+  C: >-
+    printf([Head]);
+    printf([Format], [In]);
+ScriptAssemblyDic: {}
