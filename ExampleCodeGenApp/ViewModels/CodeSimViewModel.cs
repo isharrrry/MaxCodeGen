@@ -403,7 +403,7 @@ namespace ExampleCodeGenApp.ViewModels
                     switch (ctx.ScriptLanguage)
                     {
                         case ScriptLanguage.CSharp:
-                            Are2Codes += "public class GlobalVar() {\n";
+                            Are2Codes += "public class GlobalVar {\n";
                             break;
                         case ScriptLanguage.C:
                             Are2Codes += "struct GlobalVar {\n";
@@ -674,12 +674,14 @@ namespace ExampleCodeGenApp.ViewModels
         Task RunScriptTask;
         private void RunScriptExec()
         {
+            RunCsharp(ScriptSource);
+            return;
             //script.DoString(source);
             // 创建一个 CancellationTokenSource 对象
             CTS = new CancellationTokenSource();
             // 创建一个 CancellationToken 对象，用于传递给 CSharpScript.RunAsync 方法
             CancellationToken token = CTS.Token;
-            RunScriptTask = Task.Run(() => { RunCsharp(ScriptSource, token); });
+            RunScriptTask = Task.Run(() => { RunCsharp2(ScriptSource, token); });
 
             //RunCsharp(ScriptSource);
         }
@@ -691,8 +693,67 @@ namespace ExampleCodeGenApp.ViewModels
         Boolean Builded = false;
         private double stepSize = 0.1;
 
-        Assembly assembly; 
         private void BuildCsharp(string source)
+        {
+            try
+            {
+                Log($"以CSharp编译开始...");
+                Log($"检查项目..");
+                if (!string.IsNullOrWhiteSpace(CGFilePath))
+                {
+                    var csprojPath = Path.Combine(Path.GetDirectoryName(CGFilePath), $"{Path.GetFileNameWithoutExtension(CGFilePath)}.csproj");
+                    if (!File.Exists(csprojPath))
+                    {
+                        File.WriteAllText(csprojPath, @"
+<Project Sdk=""Microsoft.NET.Sdk"">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>
+");
+                    }
+                    Log($"已创建工程配置");
+                    var csPath = Path.GetDirectoryName(CGFilePath);
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe", // 要启动的程序或脚本
+                        Arguments = "/c dotnet build & pause", // 传递给程序的参数
+                        WorkingDirectory = csPath, // 指定工作路径
+                        UseShellExecute = true,
+                        RedirectStandardOutput = false,
+                        CreateNoWindow = false
+                    };
+                    Log($"编译...");
+                    using (Process process = new Process { StartInfo = startInfo })
+                    {
+                        var r = process.Start();
+                        process.WaitForExit();
+                        ScriptBinFilePath = Path.Combine(Path.GetDirectoryName(CGFilePath), "bin/Debug/net6.0", $"{Path.GetFileNameWithoutExtension(CGFilePath)}.dll");
+                    }
+                    Log($"编译完成！");
+                }
+                else
+                {
+                    Log($"无法编译，请先保存项目！");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                Log(ex);
+            }
+        }
+
+        Assembly assembly;
+        /// <summary>
+        /// roslyn 方式，输出的dll不能命令行运行，未解决
+        /// </summary>
+        /// <param name="source"></param>
+        private void BuildCsharp2(string source)
         {
             try
             {
@@ -743,7 +804,14 @@ namespace Test{
                     .AddReferences(_ref)
                     .AddSyntaxTrees(syntaxTree)
                     .WithOptions(new CSharpCompilationOptions(
-                        Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary
+                        Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary,
+                        usings: null,
+                        optimizationLevel: OptimizationLevel.Debug, // TODO
+                        checkOverflow: false,                       // TODO
+                        allowUnsafe: true,                          // TODO
+                        platform: Platform.AnyCpu,
+                        warningLevel: 4,
+                        xmlReferenceResolver: null // don't support XML file references in interactive (permissions & doc comment includes)
                         ));
                 //,
                 //        usings: new List<string> { "System" },
@@ -832,7 +900,7 @@ namespace Test{
         /// </summary>
         /// <param name="source"></param>
         /// <param name="token"></param>
-        private async void RunCsharp(string source, CancellationToken token)
+        private async void RunCsharp2(string source, CancellationToken token)
         {
             try
             {
