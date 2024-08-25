@@ -102,6 +102,14 @@ ScriptAssemblyDic，多种语言的引用头文件（包括文件名、库名）
 ## 贡献
 欢迎在 Gitee / GitHub 页面上提交错误报告、补丁、功能请求、拉取请求。
 
+### 捐赠
+
+通过加密货币TokenPocket链接0x9fa235dF11f2682a8a29Ebc3bB58b77E562A03FD
+
+通过支付宝AliPay扫码
+
+<img src="doc/image/alipay.jpg" alt="alipay" style="zoom: 25%;" />
+
 ## License
 
 This library is licensed under the Apache License 2.0. (See [choosealicense.com/licenses/apache-2.0](https://choosealicense.com/licenses/apache-2.0) for a brief summery)  
